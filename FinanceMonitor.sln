@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinanceMonitor.Api", "FinanceMonitor.Api\FinanceMonitor.Api.csproj", "{49DCF737-F866-4451-8175-FC67DEC77B2C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinanceMonitor.DAL", "FinanceMonitor.DAL\FinanceMonitor.DAL.csproj", "{D280F53F-7318-4F12-B968-4D979DF99CFD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{49DCF737-F866-4451-8175-FC67DEC77B2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49DCF737-F866-4451-8175-FC67DEC77B2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49DCF737-F866-4451-8175-FC67DEC77B2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49DCF737-F866-4451-8175-FC67DEC77B2C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D280F53F-7318-4F12-B968-4D979DF99CFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D280F53F-7318-4F12-B968-4D979DF99CFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D280F53F-7318-4F12-B968-4D979DF99CFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D280F53F-7318-4F12-B968-4D979DF99CFD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
