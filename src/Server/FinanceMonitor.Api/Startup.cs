@@ -73,14 +73,14 @@ namespace FinanceMonitor.Api
                 {
                     trigger.WithIdentity("PullHistoryJob")
                         .StartAt(DateTimeOffset.UtcNow.AddSeconds(7))
-                        .WithCronSchedule("* 0/1 * * * ?");
+                        .WithCronSchedule("0 * * ? * * *");
                 });
 
                 q.ScheduleJob<PullDailyInfoJob>(trigger =>
                 {
                     trigger.WithIdentity("PullDailyInfoJob")
                         .StartAt(DateTimeOffset.UtcNow.AddSeconds(5))
-                        .WithCronSchedule("* 0/1 * * * ?");
+                        .WithCronSchedule("0 * * ? * * *");
                 });
             });
             

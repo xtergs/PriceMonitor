@@ -19,11 +19,7 @@ namespace FinanceMonitor.DAL.Repositories
         {
             _options = options.Value;
         }
-
-        public async Task AddStock()
-        {
-            using var db = new SqlConnection(_options.ConnectionString);
-        }
+        
 
         public async Task<Stock> GetStock(string symbol)
         {
@@ -43,9 +39,11 @@ namespace FinanceMonitor.DAL.Repositories
             await using var db = new SqlConnection(_options.ConnectionString);
 
             var inserted = await db.QueryFirstAsync<Stock>(
-                @"Insert into Stock (Symbol, Market, Timezone, Time, ShortName, LongName, Currency, FinancialCurrency, Language )
+                @"Insert into Stock (Symbol, Market, Timezone, Time, ShortName, LongName, Currency, FinancialCurrency, 
+                   Language, QuoteType )
 Output  Inserted.* 
-values (@Symbol, @Market, @Timezone, @Time, @ShortName, @LongName, @Currency, @FinancialCurrency, @Language)", stock);
+values (@Symbol, @Market, @Timezone, @Time, @ShortName, @LongName, @Currency, @FinancialCurrency, 
+        @Language, @QuoteType)", stock);
             return inserted;
         }
 
@@ -118,8 +116,9 @@ values (@StockId, @Volume, @Opened, @Closed, @High, @Low, @DateTime)",
             var db = GetConnection();
 
             var result = await db.ExecuteAsync(
-                @"Insert into PriceDaily (StockId, Ask, Bid, AskSize, BidSize, Time) 
-values (@StockId, @Ask, @Bid, @AskSize, @BidSize, @Time)", price);
+                @"Insert into PriceDaily (StockId, Ask, Bid, AskSize, BidSize, Time,
+                        Price, Volume) 
+values (@StockId, @Ask, @Bid, @AskSize, @BidSize, @Time, @Price, @Volume)", price);
         }
 
         public async Task<ICollection<ShortStockInfo>> GetStocks()
@@ -128,6 +127,44 @@ values (@StockId, @Ask, @Bid, @AskSize, @BidSize, @Time)", price);
 
             var result = await db.QueryAsync<ShortStockInfo>(
                 @"select S.Id, S.Symbol from Stock as S");
+
+            return result.ToArray();
+        }
+        
+        public async Task<ICollection<Stock>> GetSavedStocks()
+        {
+            var db = GetConnection();
+
+            var result = await db.QueryAsync<Stock>(
+                @"select S.* from Stock as S");
+
+            return result.ToArray();
+        }
+
+        public async Task<ICollection<PriceHistory>> GetStockHistory(Guid stockId)
+        {
+            var db = GetConnection();
+
+            var result = await db.QueryAsync<PriceHistory>(
+                @"select PH.* from PriceHistory as PH
+where StockId = @StockId and DateTime > @Time
+order by DateTime", new
+                {
+                    StockId = stockId,
+                    Time = DateTime.UtcNow.AddDays(-90)
+                });
+
+            return result.ToArray();
+        }
+
+        public async Task<ICollection<PriceDaily>> GetStockDaily(Guid stockId)
+        {
+            var db = GetConnection();
+
+            var result = await db.QueryAsync<PriceDaily>(
+                @"select * from PriceDaily
+where StockId = @StockId
+order by Time", new {StockId = stockId});
 
             return result.ToArray();
         }

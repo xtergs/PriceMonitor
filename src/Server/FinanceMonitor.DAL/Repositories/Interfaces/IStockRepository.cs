@@ -8,7 +8,6 @@ namespace FinanceMonitor.DAL.Repositories.Interfaces
 {
     public interface IStockRepository
     {
-        Task AddStock();
         Task<Stock> GetStock(string symbol);
         Task<Stock> CreateStock(Stock stock);
         Task<UserPrice> AddUserPrice(UserPrice price);
@@ -18,5 +17,8 @@ namespace FinanceMonitor.DAL.Repositories.Interfaces
         Task InsertHistory(ICollection<PriceHistory> history);
         Task AddDailyPrice(PriceDaily price);
         Task<ICollection<ShortStockInfo>> GetStocks();
+        Task<ICollection<Stock>> GetSavedStocks();
+        Task<ICollection<PriceHistory>> GetStockHistory(Guid stockId);
+        Task<ICollection<PriceDaily>> GetStockDaily(Guid stockId);
     }
 }

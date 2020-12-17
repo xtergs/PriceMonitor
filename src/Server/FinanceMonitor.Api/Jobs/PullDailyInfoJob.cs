@@ -3,12 +3,12 @@ using System.Threading.Tasks;
 using FinanceMonitor.DAL.Models;
 using FinanceMonitor.DAL.Repositories.Interfaces;
 using FinanceMonitor.DAL.Services.Interfaces;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.Logging;
 using Quartz;
 
 namespace FinanceMonitor.Api.Jobs
 {
+    [DisallowConcurrentExecution]
     public class PullDailyInfoJob : IJob
     {
         private readonly IYahooApiService _apiService;
@@ -49,7 +49,9 @@ namespace FinanceMonitor.Api.Jobs
                     AskSize = apiInfo.AskSize,
                     BidSize = apiInfo.BidSize,
                     StockId = stock.Id,
-                    Time = apiInfo.Time
+                    Time = apiInfo.Time,
+                    Price = apiInfo.Price,
+                    Volume =  apiInfo.Volume,
                 });
             }
         }

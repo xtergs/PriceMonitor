@@ -19,24 +19,36 @@ namespace FinanceMonitor.DAL.Services
                     Field.FinancialCurrency,
                     Field.LongName,
                     Field.ShortName,
-                    Field.Language)
+                    Field.Language,
+                    Field.QuoteType)
                 .QueryAsync();
 
             if (!result.ContainsKey(symbol)) return null;
 
             var data = result[symbol];
-            return new ApiStock
+            var model =  new ApiStock
             {
                 Symbol = data.Symbol,
                 Market = data.Market,
                 Time = DateTimeOffset.FromUnixTimeSeconds(data.RegularMarketTime).UtcDateTime,
                 Timezone = data.ExchangeTimezoneName,
-                LongName = data.LongName,
                 ShortName = data.ShortName,
                 Currency = data.Currency,
                 Language = data.Language,
-                FinancialCurrency = data.FinancialCurrency
+                QuoteType = data.QuoteType
             };
+
+            if (data.Fields.ContainsKey("LongName"))
+            {
+                model.LongName = data.LongName;
+            }
+
+            if (data.Fields.ContainsKey("FinancialCurrency"))
+            {
+                model.FinancialCurrency = data.FinancialCurrency;
+            }
+
+            return model;
         }
 
         public async Task<ICollection<ApiHistory>> GetFullHistory(string symbol)
@@ -70,22 +82,58 @@ namespace FinanceMonitor.DAL.Services
                     Field.BidSize,
                     Field.MarketState,
                     Field.PostMarketTime,
-                    Field.PostMarketPrice)
+                    Field.PostMarketPrice,
+                    Field.RegularMarketTime,
+                    Field.RegularMarketPrice,
+                    Field.RegularMarketVolume)
                 .QueryAsync();
 
             if (!result.ContainsKey(symbol)) return null;
 
             var data = result[symbol];
-            return new ApiDailyStock
+            DateTime time = DateTime.UtcNow;
+            
+            var model = new ApiDailyStock
             {
                 Symbol = data.Symbol,
-                Time = DateTimeOffset.FromUnixTimeSeconds(data.PostMarketTime).UtcDateTime,
-                Ask = data.Ask,
-                Bid = data.Bid,
-                AskSize = data.AskSize,
-                BidSize = data.BidSize,
-                MarketState = data.MarketState
+                MarketState = data.MarketState,
             };
+            
+            if (data.MarketState == "REGULAR")
+            {
+                model.Time = DateTimeOffset.FromUnixTimeSeconds(data.RegularMarketTime).UtcDateTime;
+                model.Price = data.RegularMarketPrice;
+                model.Volume = data.RegularMarketVolume;
+
+            }
+            else if (data.MarketState == "POST")
+            {
+                model.Time = DateTimeOffset.FromUnixTimeSeconds(data.PostMarketTime).UtcDateTime;
+                model.Price = data.PostMarketPrice;
+                model.Volume = data.RegularMarketVolume;
+            }
+
+            if (data.Fields.ContainsKey("Ask"))
+            {
+                model.Ask = data.Ask;
+            }
+
+            if (data.Fields.ContainsKey("AskSize"))
+            {
+                model.AskSize = data.AskSize;
+            }
+
+            if (data.Fields.ContainsKey("Bid"))
+            {
+                model.Bid = data.Bid;
+            }
+
+            if (data.Fields.ContainsKey("BidSize"))
+            {
+                model.BidSize = data.BidSize;
+            }
+
+            return model;
         }
     }
 }

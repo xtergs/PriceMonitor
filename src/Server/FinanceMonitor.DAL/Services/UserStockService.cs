@@ -43,7 +43,8 @@ namespace FinanceMonitor.DAL.Services
                     ShortName = apiResult.ShortName,
                     Currency = apiResult.Currency,
                     FinancialCurrency = apiResult.FinancialCurrency,
-                    Language = apiResult.Language
+                    Language = apiResult.Language,
+                    QuoteType = apiResult.QuoteType,
                 });
             }
 
