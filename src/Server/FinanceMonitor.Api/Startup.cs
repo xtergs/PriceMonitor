@@ -90,6 +90,8 @@ namespace FinanceMonitor.Api
             });
 
             SqlMapper.AddTypeMap(typeof(DateTime), DbType.DateTime2);
+
+            services.AddCors();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -102,6 +104,8 @@ namespace FinanceMonitor.Api
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "FinanceMonitor.Api v1"));
             }
 
+            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+            
             app.UseHttpsRedirection();
 
             app.UseRouting();

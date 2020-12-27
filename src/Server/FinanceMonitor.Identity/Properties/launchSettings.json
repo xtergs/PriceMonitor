@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "SelfHost": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "seed" : true
+      },
+      "applicationUrl": "https://localhost:5002"
+    }
+  }
+}
