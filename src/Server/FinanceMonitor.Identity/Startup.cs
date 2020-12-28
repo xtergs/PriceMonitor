@@ -35,9 +35,9 @@ namespace FinanceMonitor.Identity
         {
             var rebusConfig = new RebusConfig();
             Configuration.Bind("Rebus", rebusConfig);
-            
+
             services.AddControllersWithViews();
-            
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo {Title = "FinanceMonitor.Identity", Version = "v1"});
@@ -90,8 +90,9 @@ namespace FinanceMonitor.Identity
 
             services.AddRebus(configure =>
             {
-                configure.Transport(t => t.UseRabbitMq(rebusConfig.RabbitMQConnection, "identity"));
-                configure.Routing(r => r.TypeBased().MapAssemblyOf<Message>("Messages"));
+                configure.Transport(t => t.UseRabbitMq(rebusConfig.RabbitMQConnection, "identity")
+                    .ClientConnectionName("identity"));
+                    configure.Routing(r => r.TypeBased().MapAssemblyOf<Message>("api"));
                 return configure;
             });
         }
@@ -102,11 +103,11 @@ namespace FinanceMonitor.Identity
             {
                 app.UseDeveloperExceptionPage();
                 app.UseDatabaseErrorPage();
-                
+
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "FinanceMonitor.Identity v1"));
             }
-            
+
             app.ApplicationServices.UseRebus();
 
             app.UseStaticFiles();

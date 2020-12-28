@@ -20,6 +20,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\FinanceMonitor.DAL\FinanceMonitor.DAL.csproj" />
+      <ProjectReference Include="..\FinanceMonitor.Messages\FinanceMonitor.Messages.csproj" />
     </ItemGroup>
 
 </Project>

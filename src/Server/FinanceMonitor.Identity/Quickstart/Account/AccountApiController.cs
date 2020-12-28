@@ -46,7 +46,7 @@ namespace IdentityServerHost.Quickstart.UI
                 throw new Exception("Failed to create user");
             
             await _userManager.AddPasswordAsync(newUser, request.Password);
-            await _bus.Publish(new UserCreated()
+            await _bus.Send(new UserCreated()
             {
                 Email = newUser.Email,
                 UserId = newUser.Id,

@@ -6,11 +6,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using FinanceMonitor.Api.Jobs;
+using FinanceMonitor.Api.MessageHandlers;
 using FinanceMonitor.Api.Models;
 using FinanceMonitor.DAL.Repositories;
 using FinanceMonitor.DAL.Repositories.Interfaces;
 using FinanceMonitor.DAL.Services;
 using FinanceMonitor.DAL.Services.Interfaces;
+using FinanceMonitor.Messages;
 using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -24,9 +26,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Quartz;
 using Rebus.Config;
-using Rebus.Messages;
+using Rebus.Handlers;
 using Rebus.Routing.TypeBased;
 using Rebus.ServiceProvider;
+using Message = Rebus.Messages.Message;
 
 namespace FinanceMonitor.Api
 {
@@ -106,10 +109,10 @@ namespace FinanceMonitor.Api
                     options.ApiName = "api";
                 });
 
+            services.AutoRegisterHandlersFromAssemblyOf<UserCreatedHandler>();
             services.AddRebus(configure =>
             {
-                configure.Transport(t => t.UseRabbitMq(rebusConfig.RabbitMQConnection, "identity"));
-                configure.Routing(r => r.TypeBased().MapAssemblyOf<Message>("Messages"));
+                configure.Transport(t => t.UseRabbitMq(rebusConfig.RabbitMQConnection, "api").ClientConnectionName("api"));
                 return configure;
             });
         }
@@ -123,6 +126,11 @@ namespace FinanceMonitor.Api
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "FinanceMonitor.Api v1"));
             }
+            
+            app.ApplicationServices.UseRebus(async bus =>
+            {
+                await bus.Subscribe<UserCreatedHandler>();
+            });
 
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
