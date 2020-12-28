@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using FinanceMonitor.DAL.Dto;
 using FinanceMonitor.DAL.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YahooFinanceApi;
 
@@ -40,6 +41,13 @@ namespace FinanceMonitor.Api.Controllers
                 DateTime = DateTime.UtcNow,
                 UserId = Guid.Empty
             });
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<bool> TestAuth()
+        {
+            return true;
         }
     }
 }

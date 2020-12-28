@@ -70,6 +70,7 @@ namespace FinanceMonitor.Identity
                 .AddInMemoryIdentityResources(Config.IdentityResources)
                 .AddInMemoryApiScopes(Config.ApiScopes)
                 .AddInMemoryClients(Config.Clients)
+                .AddInMemoryApiResources(Config.ApiResources)
                 .AddAspNetIdentity<ApplicationUser>();
 
             // not recommended for production - you need to store your key material somewhere secure

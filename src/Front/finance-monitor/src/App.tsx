@@ -1,51 +1,46 @@
 import React from 'react';
-import { Stack, Text, Link, FontWeights } from 'office-ui-fabric-react';
+import {Stack, Text, FontWeights, DefaultButton} from 'office-ui-fabric-react';
 import {AddStockForm} from "./Components/AddStockForm/AddStockForm";
+import {UserManager} from "oidc-client";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link
+} from "react-router-dom";
+import {Home} from "./Pages/Home";
+import {SigninResponse} from "./Pages/Login/SigninResponse";
 
 const boldStyle = { root: { fontWeight: FontWeights.semibold } };
 
+const manager = new UserManager({
+    client_id: "interactive",
+    client_secret: "49C1A7E1-0C79-4A89-A3D6-A37998FB86B0",
+    scope: "openid profile scope2",
+    authority: "https://localhost:5002",
+    redirect_uri: "http://localhost:3000/signin",
+    response_type: "code",
+
+});
+
+export const GetManager = ()=> manager;
+
 export const App: React.FunctionComponent = () => {
+
+
+
+
   return (
-    <Stack
-      horizontalAlign="center"
-      verticalAlign="center"
-      verticalFill
-      styles={{
-        root: {
-          width: '960px',
-          margin: '0 auto',
-          textAlign: 'center',
-          color: '#605e5c'
-        }
-      }}
-      gap={15}
-    >
-      <AddStockForm onStockAdded={(stock)=> alert(JSON.stringify(stock))} />
-      <img
-        src="https://raw.githubusercontent.com/Microsoft/just/master/packages/just-stack-uifabric/template/src/components/fabric.png"
-        alt="logo"
-      />
-      <Text variant="xxLarge" styles={boldStyle}>
-        Welcome to Your UI Fabric App
-      </Text>
-      <Text variant="large">For a guide on how to customize this project, check out the UI Fabric documentation.</Text>
-      <Text variant="large" styles={boldStyle}>
-        Essential Links
-      </Text>
-      <Stack horizontal gap={15} horizontalAlign="center">
-        <Link href="https://developer.microsoft.com/en-us/fabric">Docs</Link>
-        <Link href="https://stackoverflow.com/questions/tagged/office-ui-fabric">Stack Overflow</Link>
-        <Link href="https://github.com/officeDev/office-ui-fabric-react/">Github</Link>
-        <Link href="https://twitter.com/officeuifabric">Twitter</Link>
-      </Stack>
-      <Text variant="large" styles={boldStyle}>
-        Design System
-      </Text>
-      <Stack horizontal gap={15} horizontalAlign="center">
-        <Link href="https://developer.microsoft.com/en-us/fabric#/styles/icons">Icons</Link>
-        <Link href="https://developer.microsoft.com/en-us/fabric#/styles/typography">Typography</Link>
-        <Link href="https://developer.microsoft.com/en-us/fabric#/styles/themegenerator">Theme</Link>
-      </Stack>
-    </Stack>
+      <Router>
+        <Switch>
+          <Route path={"/signin"} >
+            <SigninResponse />
+          </Route>
+          <Route path={"/"} >
+            <Home />
+          </Route>
+        </Switch>
+      </Router>
+
   );
 };

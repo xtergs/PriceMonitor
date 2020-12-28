@@ -46,13 +46,27 @@ namespace FinanceMonitor.Identity
 
                     AllowedGrantTypes = GrantTypes.Code,
 
-                    RedirectUris = {"https://localhost:44300/signin-oidc"},
+                    RedirectUris =
+                    {
+                        "https://localhost:44300/signin-oidc",
+                        "http://localhost:3000/signin"
+                    },
                     FrontChannelLogoutUri = "https://localhost:44300/signout-oidc",
                     PostLogoutRedirectUris = {"https://localhost:44300/signout-callback-oidc"},
+                    AllowedCorsOrigins = {"http://localhost:3000"},
 
                     AllowOfflineAccess = true,
-                    AllowedScopes = {"openid", "profile", "scope2"}
+                    AllowedScopes = {"openid", "profile", "scope2"},
+                    
                 },
             };
+
+        public static ApiResource[] ApiResources = new[]
+        {
+            new ApiResource("api", new[] {"openid", "profile"})
+            {
+                Scopes = new List<string>(){"scope2"}
+            }
+        };
     }
 }

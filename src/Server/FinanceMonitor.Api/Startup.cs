@@ -6,10 +6,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using FinanceMonitor.Api.Jobs;
+using FinanceMonitor.Api.Models;
 using FinanceMonitor.DAL.Repositories;
 using FinanceMonitor.DAL.Repositories.Interfaces;
 using FinanceMonitor.DAL.Services;
 using FinanceMonitor.DAL.Services.Interfaces;
+using IdentityServer4.AccessTokenValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -20,6 +23,10 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Quartz;
+using Rebus.Config;
+using Rebus.Messages;
+using Rebus.Routing.TypeBased;
+using Rebus.ServiceProvider;
 
 namespace FinanceMonitor.Api
 {
@@ -35,6 +42,9 @@ namespace FinanceMonitor.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var rebusConfig = new RebusConfig();
+            Configuration.Bind("Rebus", rebusConfig);
+
             services.Configure<StockOptions>(x =>
             {
                 x.ConnectionString = Configuration.GetConnectionString("DefaultConnection");
@@ -61,10 +71,7 @@ namespace FinanceMonitor.Api
 
             services.AddQuartz(x =>
             {
-                x.UseMicrosoftDependencyInjectionScopedJobFactory(c =>
-                {
-                    c.AllowDefaultConstructor = true;
-                });
+                x.UseMicrosoftDependencyInjectionScopedJobFactory(c => { c.AllowDefaultConstructor = true; });
             });
 
             services.AddQuartz(q =>
@@ -83,15 +90,28 @@ namespace FinanceMonitor.Api
                         .WithCronSchedule("0 * * ? * * *");
                 });
             });
-            
-            services.AddQuartzServer(options =>
-            {
-                options.WaitForJobsToComplete = true;
-            });
+
+            services.AddQuartzServer(options => { options.WaitForJobsToComplete = true; });
 
             SqlMapper.AddTypeMap(typeof(DateTime), DbType.DateTime2);
 
             services.AddCors();
+
+            services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
+                .AddIdentityServerAuthentication(options =>
+                {
+                    // base-address of your identityserver
+                    options.Authority = "https://localhost:5002";
+
+                    options.ApiName = "api";
+                });
+
+            services.AddRebus(configure =>
+            {
+                configure.Transport(t => t.UseRabbitMq(rebusConfig.RabbitMQConnection, "identity"));
+                configure.Routing(r => r.TypeBased().MapAssemblyOf<Message>("Messages"));
+                return configure;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -105,10 +125,12 @@ namespace FinanceMonitor.Api
             }
 
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-            
+
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 

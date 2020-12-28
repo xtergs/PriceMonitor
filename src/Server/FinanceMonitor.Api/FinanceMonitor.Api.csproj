@@ -5,12 +5,15 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="IdentityServer4.AccessTokenValidation" Version="3.0.1" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.1" NoWarn="NU1605" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="5.0.1" NoWarn="NU1605" />
         <PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />
         <PackageReference Include="Quartz" Version="3.2.3" />
         <PackageReference Include="Quartz.AspNetCore" Version="3.2.3" />
         <PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.2.3" />
+        <PackageReference Include="Rebus.RabbitMq" Version="7.3.0" />
+        <PackageReference Include="Rebus.ServiceProvider" Version="6.0.0" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="5.6.3" />
         <PackageReference Include="YahooFinanceApi" Version="2.1.2" />
     </ItemGroup>
