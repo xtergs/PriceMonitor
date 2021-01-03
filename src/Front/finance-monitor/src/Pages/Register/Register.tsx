@@ -19,6 +19,9 @@ export const Register = (props: IProps) => {
         setSubmitting(true)
         try {
             await Api.register(email, password);
+            setEmail('');
+            setPassword('')
+            alert("Now you can Sign In")
         }
         finally {
             setSubmitting(false)

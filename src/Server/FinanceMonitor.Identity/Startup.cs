@@ -95,6 +95,8 @@ namespace FinanceMonitor.Identity
                     configure.Routing(r => r.TypeBased().MapAssemblyOf<Message>("api"));
                 return configure;
             });
+
+            services.AddCors();
         }
 
         public void Configure(IApplicationBuilder app)
@@ -111,6 +113,8 @@ namespace FinanceMonitor.Identity
             app.ApplicationServices.UseRebus();
 
             app.UseStaticFiles();
+
+            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
             app.UseRouting();
             app.UseIdentityServer();

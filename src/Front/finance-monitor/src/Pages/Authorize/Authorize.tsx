@@ -1,7 +1,8 @@
 import * as React from 'react'
+import {useContext, useEffect} from 'react'
 import {PrimaryButton, Separator, Stack, Text} from "@fluentui/react";
 import {Register} from "../Register/Register";
-import {GetManager} from "../../App";
+import {AppContext, GetManager} from "../../App";
 
 interface IProps {
 
@@ -9,23 +10,36 @@ interface IProps {
 
 export const Authorize = (props: IProps) => {
 
+    const context = useContext(AppContext)
+
     const login = async () => {
 
         const manager = GetManager()
 
         await manager.signinRedirect()
+    }
 
-        const user = await manager.getUser()
-        console.log(user);
+    const logout = async () => {
+        const manager = GetManager();
+        await manager.signoutRedirect();
     }
 
     return (<>
         <Stack>
             <Text>Welcome to PriceMonitor app</Text>
-            <Text>Register</Text>
-            <Register/>
-            <Separator title={"OR"}/>
-            <PrimaryButton onClick={login}>Sign In</PrimaryButton>
+            {!!context.user ? (
+                <>
+                    <Text>You are authorized</Text>
+                    <PrimaryButton onClick={logout}>Log Out</PrimaryButton>
+                </>
+            ) : (
+                <>
+                    <Text>Register</Text>
+                    <Register/>
+                    <Separator title={"OR"}>OR</Separator>
+                    <PrimaryButton onClick={login}>Sign In</PrimaryButton>
+                </>
+            )}
         </Stack>
     </>)
 }

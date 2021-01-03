@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
+using System;
 using IdentityServer4.Models;
 using System.Collections.Generic;
 
@@ -52,12 +53,16 @@ namespace FinanceMonitor.Identity
                         "http://localhost:3000/signin"
                     },
                     FrontChannelLogoutUri = "https://localhost:44300/signout-oidc",
-                    PostLogoutRedirectUris = {"https://localhost:44300/signout-callback-oidc"},
+                    PostLogoutRedirectUris =
+                    {
+                        "http://localhost:3000/logout-callback",
+                        "https://localhost:44300/signout-callback-oidc"
+                    },
                     AllowedCorsOrigins = {"http://localhost:3000"},
 
                     AllowOfflineAccess = true,
                     AllowedScopes = {"openid", "profile", "scope2"},
-                    
+                    AccessTokenLifetime = (int)TimeSpan.FromDays(10).TotalSeconds
                 },
             };
 
