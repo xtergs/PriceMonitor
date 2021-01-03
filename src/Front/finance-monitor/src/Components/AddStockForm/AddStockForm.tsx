@@ -1,6 +1,6 @@
 import * as React from "react";
 import {Stock} from "../../Models/Stock";
-import {Stack, TextField, DefaultButton} from 'office-ui-fabric-react';
+import {Stack, TextField, DefaultButton} from '@fluentui/react';
 import {useState} from "react";
 import {Api} from "../../Api/Api";
 
@@ -43,9 +43,9 @@ export const AddStockForm = (props: IProps) => {
     }
 
     return (<Stack>
-<TextField label={"Symbol"} onChanged={updateSymbol} />
-<TextField label={"Price"} onChanged={updatePrice}/>
-<TextField label={"Count"} onChanged={updateCount} />
+<TextField label={"Symbol"} onChange={updateSymbol} />
+<TextField label={"Price"} onChange={updatePrice}/>
+<TextField label={"Count"} onChange={updateCount} />
 <DefaultButton text={"Add"} disabled={isSubmitting} onClick={add}/>
     </Stack>)
 }

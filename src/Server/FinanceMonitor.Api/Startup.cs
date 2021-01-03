@@ -64,6 +64,7 @@ namespace FinanceMonitor.Api
             services.AddScoped<IYahooApiService, YahooApiService>();
             services.AddScoped<IUserStockService, UserStockService>();
             services.AddSingleton<MigrationService>();
+            services.AddScoped<IUserRepository, UserRepository>();
 
 
             services.AddControllers();

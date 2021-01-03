@@ -1,5 +1,5 @@
 import React from 'react';
-import {Stack, Text, FontWeights, DefaultButton} from 'office-ui-fabric-react';
+import {Stack, Text, FontWeights, DefaultButton} from '@fluentui/react';
 import {AddStockForm} from "./Components/AddStockForm/AddStockForm";
 import {UserManager} from "oidc-client";
 import {

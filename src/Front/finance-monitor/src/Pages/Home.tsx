@@ -1,8 +1,9 @@
 import * as React from 'react'
-import {DefaultButton, Stack} from "office-ui-fabric-react";
+import {DefaultButton, Stack} from "@fluentui/react";
 import {AddStockForm} from "../Components/AddStockForm/AddStockForm";
 import {UserManager} from "oidc-client";
 import {GetManager} from "../App";
+import {Authorize} from "./Authorize/Authorize";
 
 export const Home = ()=>{
 
@@ -31,7 +32,7 @@ export const Home = ()=>{
             }}
             gap={15}
         >
-            <DefaultButton onClick={login}>Log in</DefaultButton>
+            <Authorize/>
             <AddStockForm onStockAdded={(stock)=> alert(JSON.stringify(stock))} />
             <img
                 src="https://raw.githubusercontent.com/Microsoft/just/master/packages/just-stack-uifabric/template/src/components/fabric.png"

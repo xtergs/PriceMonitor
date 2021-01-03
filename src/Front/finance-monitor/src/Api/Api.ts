@@ -1,6 +1,7 @@
 import {Stock} from "../Models/Stock";
 
 const host = "https://localhost:5001";
+const identityHost = "https://localhost:5002"
 
 export const Api = {
     addStock: async (symbol: string,
@@ -22,5 +23,21 @@ export const Api = {
 
         return response.json();
 
+    },
+
+    register: async (email: string, password: string)=>{
+        const response = await fetch(`${identityHost}/api/Account/Register/Register`,
+            {
+                method: "POST",
+                body: JSON.stringify({
+                    email,
+                    password
+                }),
+                headers:{
+                    'Content-Type': 'application/json'
+                }
+            });
+
+        return response.json();
     }
 }

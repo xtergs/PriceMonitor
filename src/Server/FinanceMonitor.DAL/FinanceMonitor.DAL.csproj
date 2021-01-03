@@ -18,6 +18,12 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Content Include="Scripts\procedures.sql">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <Content Include="Scripts\tables.sql">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
       <None Remove="migration.sql" />
       <Content Include="migration.sql">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>

@@ -1,4 +1,6 @@
 ﻿using System.Threading.Tasks;
+using FinanceMonitor.DAL.Models;
+using FinanceMonitor.DAL.Repositories;
 using FinanceMonitor.DAL.Repositories.Interfaces;
 using FinanceMonitor.Messages;
 
@@ -6,16 +8,19 @@ namespace FinanceMonitor.Api.MessageHandlers
 {
     public class UserCreatedHandler : Rebus.Handlers.IHandleMessages<UserCreated>
     {
-        private readonly IStockRepository _repository;
+        private readonly IUserRepository _repository;
 
-        public UserCreatedHandler(IStockRepository repository)
+        public UserCreatedHandler(IUserRepository repository)
         {
             _repository = repository;
         }
             
-        public Task Handle(UserCreated message)
+        public async Task Handle(UserCreated message)
         {
-            return Task.CompletedTask;
+            await _repository.AddUser(new UserProfile()
+            {
+                Id = message.UserId
+            });
         }
     }
 }
