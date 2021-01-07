@@ -18,7 +18,7 @@ namespace FinanceMonitor.DAL.Repositories.Interfaces
         Task AddDailyPrice(PriceDaily price);
         Task<ICollection<ShortStockInfo>> GetStocks();
         Task<ICollection<Stock>> GetSavedStocks();
-        Task<ICollection<PriceHistory>> GetStockHistory(Guid stockId);
-        Task<ICollection<PriceDaily>> GetStockDaily(Guid stockId);
+        Task<ICollection<PriceHistory>> GetStockHistory(string stockId);
+        Task<ICollection<PriceDaily>> GetStockDaily(string symbol, DateTime date);
     }
 }

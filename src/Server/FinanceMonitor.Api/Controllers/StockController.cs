@@ -24,18 +24,25 @@ namespace FinanceMonitor.Api.Controllers
             return stocks;
         }
 
-        [HttpGet("{stockId:Guid}/history")]
-        public async Task<ICollection<PriceHistory>> GetStockHistory(Guid stockId)
+        [HttpGet("{symbol}")]
+        public async Task<Stock> GetStockDetails(string symbol)
         {
-            var history = await _repository.GetStockHistory(stockId);
+            var stock = await _repository.GetStock(symbol);
+            return stock;
+        }
+
+        [HttpGet("{symbol}/history")]
+        public async Task<ICollection<PriceHistory>> GetStockHistory(string symbol)
+        {
+            var history = await _repository.GetStockHistory(symbol);
 
             return history;
         }
 
-        [HttpGet("{stockId:Guid}/daily")]
-        public async Task<ICollection<PriceDaily>> GetStockDaily(Guid stockId)
+        [HttpGet("{symbol}/daily")]
+        public async Task<ICollection<PriceDaily>> GetStockDaily(string symbol)
         {
-            var daily = await _repository.GetStockDaily(stockId);
+            var daily = await _repository.GetStockDaily(symbol, DateTime.UtcNow);
 
             return daily;
         }

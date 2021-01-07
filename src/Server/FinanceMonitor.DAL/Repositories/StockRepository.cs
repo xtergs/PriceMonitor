@@ -141,14 +141,12 @@ values (@StockId, @Ask, @Bid, @AskSize, @BidSize, @Time, @Price, @Volume)", pric
             return result.ToArray();
         }
 
-        public async Task<ICollection<PriceHistory>> GetStockHistory(Guid stockId)
+        public async Task<ICollection<PriceHistory>> GetStockHistory(string stockId)
         {
             var db = GetConnection();
 
             var result = await db.QueryAsync<PriceHistory>(
-                @"select PH.* from PriceHistory as PH
-where StockId = @StockId and DateTime > @Time
-order by DateTime", new
+                @"exec dbo.GetStock @StockId , @Time", new
                 {
                     StockId = stockId,
                     Time = DateTime.UtcNow.AddDays(-90)
@@ -157,14 +155,20 @@ order by DateTime", new
             return result.ToArray();
         }
 
-        public async Task<ICollection<PriceDaily>> GetStockDaily(Guid stockId)
+        public async Task<ICollection<PriceDaily>> GetStockDaily(string symbol, DateTime date)
         {
             var db = GetConnection();
 
+            var start = date.ToUniversalTime().Date;
+            var end = start.AddDays(1);
+            
             var result = await db.QueryAsync<PriceDaily>(
-                @"select * from PriceDaily
-where StockId = @StockId
-order by Time", new {StockId = stockId});
+                @"exec dbo.GetStockDaily @Symbol, @Start, @End", new
+                {
+                    Symbol = symbol,
+                    Start = start,
+                    End = end
+                });
 
             return result.ToArray();
         }

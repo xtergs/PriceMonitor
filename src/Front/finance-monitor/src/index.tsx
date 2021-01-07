@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { App } from './App';
-import { Customizer, mergeStyles } from '@fluentui/react';
+import { mergeStyles } from '@fluentui/react';
 import * as serviceWorker from './serviceWorker';
 
 // Inject some global styles

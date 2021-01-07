@@ -1,5 +1,4 @@
 import {Stock} from "../Models/Stock";
-import {GetManager} from "../App";
 
 const host = "https://localhost:5001";
 const identityHost = "https://localhost:5002"
@@ -41,8 +40,4 @@ export const Api = {
 
         return response.json();
     },
-    isAuthorized: async()=>{
-        const user =  (await GetManager().getUser())
-        return user && !user.expired
-    }
 }

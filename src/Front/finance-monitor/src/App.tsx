@@ -9,6 +9,9 @@ import {Header} from "./Components/Header/Header";
 import {Profile} from "./Pages/Profile/Profile";
 import {Stocks} from "./Pages/Stocks/Stocks";
 import {ProtectedRoute} from "./Pages/Routes/ProtectedRoute";
+import {StockDetails} from "./Pages/Stocks/StockDetails";
+import {StockHistory} from "./Pages/Stocks/StockHistory";
+import {StockDaily} from "./Pages/Stocks/StockDaily";
 
 const boldStyle = {root: {fontWeight: FontWeights.semibold}};
 
@@ -71,6 +74,15 @@ export const App: React.FunctionComponent = () => {
                     </ProtectedRoute>
                     <Route exact={true} path={"/stocks"}>
                         <Stocks/>
+                    </Route>
+                    <Route exact={true} path={"/stocks/:symbol"}>
+                        <StockDetails />
+                    </Route>
+                    <Route exact={true} path={"/stocks/:symbol/history"}>
+                        <StockHistory />
+                    </Route>
+                    <Route exact={true} path={"/stocks/:symbol/daily"}>
+                        <StockDaily />
                     </Route>
                     <Route path={"/"}>
                         <Home/>
