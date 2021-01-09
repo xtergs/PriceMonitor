@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FinanceMonitor.Messages
+﻿namespace FinanceMonitor.Messages
 {
     public class Message
     {

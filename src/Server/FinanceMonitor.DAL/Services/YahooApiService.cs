@@ -26,7 +26,7 @@ namespace FinanceMonitor.DAL.Services
             if (!result.ContainsKey(symbol)) return null;
 
             var data = result[symbol];
-            var model =  new ApiStock
+            var model = new ApiStock
             {
                 Symbol = data.Symbol,
                 Market = data.Market,
@@ -38,15 +38,9 @@ namespace FinanceMonitor.DAL.Services
                 QuoteType = data.QuoteType
             };
 
-            if (data.Fields.ContainsKey("LongName"))
-            {
-                model.LongName = data.LongName;
-            }
+            if (data.Fields.ContainsKey("LongName")) model.LongName = data.LongName;
 
-            if (data.Fields.ContainsKey("FinancialCurrency"))
-            {
-                model.FinancialCurrency = data.FinancialCurrency;
-            }
+            if (data.Fields.ContainsKey("FinancialCurrency")) model.FinancialCurrency = data.FinancialCurrency;
 
             return model;
         }
@@ -91,20 +85,19 @@ namespace FinanceMonitor.DAL.Services
             if (!result.ContainsKey(symbol)) return null;
 
             var data = result[symbol];
-            DateTime time = DateTime.UtcNow;
-            
+            var time = DateTime.UtcNow;
+
             var model = new ApiDailyStock
             {
                 Symbol = data.Symbol,
-                MarketState = data.MarketState,
+                MarketState = data.MarketState
             };
-            
+
             if (data.MarketState == "REGULAR")
             {
                 model.Time = DateTimeOffset.FromUnixTimeSeconds(data.RegularMarketTime).UtcDateTime;
                 model.Price = data.RegularMarketPrice;
                 model.Volume = data.RegularMarketVolume;
-
             }
             else if (data.MarketState == "POST")
             {
@@ -113,25 +106,13 @@ namespace FinanceMonitor.DAL.Services
                 model.Volume = data.RegularMarketVolume;
             }
 
-            if (data.Fields.ContainsKey("Ask"))
-            {
-                model.Ask = data.Ask;
-            }
+            if (data.Fields.ContainsKey("Ask")) model.Ask = data.Ask;
 
-            if (data.Fields.ContainsKey("AskSize"))
-            {
-                model.AskSize = data.AskSize;
-            }
+            if (data.Fields.ContainsKey("AskSize")) model.AskSize = data.AskSize;
 
-            if (data.Fields.ContainsKey("Bid"))
-            {
-                model.Bid = data.Bid;
-            }
+            if (data.Fields.ContainsKey("Bid")) model.Bid = data.Bid;
 
-            if (data.Fields.ContainsKey("BidSize"))
-            {
-                model.BidSize = data.BidSize;
-            }
+            if (data.Fields.ContainsKey("BidSize")) model.BidSize = data.BidSize;
 
             return model;
         }

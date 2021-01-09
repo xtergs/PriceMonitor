@@ -12,8 +12,8 @@ namespace FinanceMonitor.DAL.Services
 {
     public class UserStockService : IUserStockService
     {
-        private readonly IStockRepository _repository;
         private readonly IYahooApiService _apiService;
+        private readonly IStockRepository _repository;
 
         public UserStockService(IStockRepository repository,
             IYahooApiService apiService)
@@ -25,15 +25,11 @@ namespace FinanceMonitor.DAL.Services
         public async Task<UserPrice> AddUserPrice(AddUserPriceDto price)
         {
             var apiResult = await _apiService.GetStock(price.Symbol);
-            if (apiResult == null)
-            {
-                throw new NotFoundException("Symbol is not found");
-            }
+            if (apiResult == null) throw new NotFoundException("Symbol is not found");
 
             var existingStock = await _repository.GetStock(price.Symbol);
             if (existingStock == null)
-            {
-                existingStock = await _repository.CreateStock(new Stock()
+                existingStock = await _repository.CreateStock(new Stock
                 {
                     Symbol = price.Symbol,
                     Market = apiResult.Market,
@@ -44,17 +40,16 @@ namespace FinanceMonitor.DAL.Services
                     Currency = apiResult.Currency,
                     FinancialCurrency = apiResult.FinancialCurrency,
                     Language = apiResult.Language,
-                    QuoteType = apiResult.QuoteType,
+                    QuoteType = apiResult.QuoteType
                 });
-            }
 
-            var addedPricing = await _repository.AddUserPrice(new UserPrice()
+            var addedPricing = await _repository.AddUserPrice(new UserPrice
             {
                 StockId = existingStock.Id,
                 UserId = price.UserId,
                 Price = price.Price,
                 Count = price.Count,
-                DateTime = price.DateTime,
+                DateTime = price.DateTime
             });
 
             return addedPricing;

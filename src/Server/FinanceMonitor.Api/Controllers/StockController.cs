@@ -10,9 +10,10 @@ namespace FinanceMonitor.Api.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class StockController : ControllerBase   
+    public class StockController : ControllerBase
     {
         private readonly IStockRepository _repository;
+
         public StockController(IStockRepository repository)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
@@ -49,6 +50,5 @@ namespace FinanceMonitor.Api.Controllers
 
             return daily;
         }
-        
     }
 }

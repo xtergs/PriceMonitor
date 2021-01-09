@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IdentityServer4;
 using IdentityServer4.Configuration;
 using IdentityServer4.Events;
 using IdentityServer4.Extensions;
@@ -23,10 +24,10 @@ namespace IdentityServerHost.Quickstart.UI
     [SecurityHeaders]
     public class DeviceController : Controller
     {
-        private readonly IDeviceFlowInteractionService _interaction;
         private readonly IEventService _events;
-        private readonly IOptions<IdentityServerOptions> _options;
+        private readonly IDeviceFlowInteractionService _interaction;
         private readonly ILogger<DeviceController> _logger;
+        private readonly IOptions<IdentityServerOptions> _options;
 
         public DeviceController(
             IDeviceFlowInteractionService interaction,
@@ -43,7 +44,7 @@ namespace IdentityServerHost.Quickstart.UI
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            string userCodeParamName = _options.Value.UserInteraction.DeviceVerificationUserCodeParameter;
+            var userCodeParamName = _options.Value.UserInteraction.DeviceVerificationUserCodeParameter;
             string userCode = Request.Query[userCodeParamName];
             if (string.IsNullOrWhiteSpace(userCode)) return View("UserCodeCapture");
 
@@ -102,10 +103,8 @@ namespace IdentityServerHost.Quickstart.UI
                 {
                     var scopes = model.ScopesConsented;
                     if (ConsentOptions.EnableOfflineAccess == false)
-                    {
                         scopes = scopes.Where(x =>
-                            x != IdentityServer4.IdentityServerConstants.StandardScopes.OfflineAccess);
-                    }
+                            x != IdentityServerConstants.StandardScopes.OfflineAccess);
 
                     grantedConsent = new ConsentResponse
                     {
@@ -151,10 +150,7 @@ namespace IdentityServerHost.Quickstart.UI
             DeviceAuthorizationInputModel model = null)
         {
             var request = await _interaction.GetAuthorizationContextAsync(userCode);
-            if (request != null)
-            {
-                return CreateConsentViewModel(userCode, model, request);
-            }
+            if (request != null) return CreateConsentViewModel(userCode, model, request);
 
             return null;
         }
@@ -192,11 +188,9 @@ namespace IdentityServerHost.Quickstart.UI
             }
 
             if (ConsentOptions.EnableOfflineAccess && request.ValidatedResources.Resources.OfflineAccess)
-            {
                 apiScopes.Add(GetOfflineAccessScope(
-                    vm.ScopesConsented.Contains(IdentityServer4.IdentityServerConstants.StandardScopes.OfflineAccess) ||
+                    vm.ScopesConsented.Contains(IdentityServerConstants.StandardScopes.OfflineAccess) ||
                     model == null));
-            }
 
             vm.ApiScopes = apiScopes;
 
@@ -205,7 +199,7 @@ namespace IdentityServerHost.Quickstart.UI
 
         private ScopeViewModel CreateScopeViewModel(IdentityResource identity, bool check)
         {
-            return new ScopeViewModel
+            return new()
             {
                 Value = identity.Name,
                 DisplayName = identity.DisplayName ?? identity.Name,
@@ -218,7 +212,7 @@ namespace IdentityServerHost.Quickstart.UI
 
         public ScopeViewModel CreateScopeViewModel(ParsedScopeValue parsedScopeValue, ApiScope apiScope, bool check)
         {
-            return new ScopeViewModel
+            return new()
             {
                 Value = parsedScopeValue.RawValue,
                 // todo: use the parsed scope value in the display?
@@ -232,9 +226,9 @@ namespace IdentityServerHost.Quickstart.UI
 
         private ScopeViewModel GetOfflineAccessScope(bool check)
         {
-            return new ScopeViewModel
+            return new()
             {
-                Value = IdentityServer4.IdentityServerConstants.StandardScopes.OfflineAccess,
+                Value = IdentityServerConstants.StandardScopes.OfflineAccess,
                 DisplayName = ConsentOptions.OfflineAccessDisplayName,
                 Description = ConsentOptions.OfflineAccessDescription,
                 Emphasize = true,

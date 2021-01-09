@@ -29,10 +29,7 @@ namespace FinanceMonitor.Api.Jobs
         {
             var stocks = await _repository.GetStocksWithoutHistory();
 
-            if (stocks.Count == 0)
-            {
-                return;
-            }
+            if (stocks.Count == 0) return;
 
             foreach (var stock in stocks)
             {

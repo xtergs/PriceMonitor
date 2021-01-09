@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
-using IdentityServer4;
 using FinanceMonitor.Identity.Data;
 using FinanceMonitor.Identity.Models;
 using FinanceMonitor.Messages;
+using IdentityServer4;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -22,14 +22,14 @@ namespace FinanceMonitor.Identity
 {
     public class Startup
     {
-        public IWebHostEnvironment Environment { get; }
-        public IConfiguration Configuration { get; }
-
         public Startup(IWebHostEnvironment environment, IConfiguration configuration)
         {
             Environment = environment;
             Configuration = configuration;
         }
+
+        public IWebHostEnvironment Environment { get; }
+        public IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
@@ -42,7 +42,7 @@ namespace FinanceMonitor.Identity
             {
                 c.SwaggerDoc("v1", new OpenApiInfo {Title = "FinanceMonitor.Identity", Version = "v1"});
             });
-            
+
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
@@ -93,7 +93,7 @@ namespace FinanceMonitor.Identity
             {
                 configure.Transport(t => t.UseRabbitMq(rebusConfig.RabbitMQConnection, "identity")
                     .ClientConnectionName("identity"));
-                    configure.Routing(r => r.TypeBased().MapAssemblyOf<Message>("api"));
+                configure.Routing(r => r.TypeBased().MapAssemblyOf<Message>("api"));
                 return configure;
             });
 

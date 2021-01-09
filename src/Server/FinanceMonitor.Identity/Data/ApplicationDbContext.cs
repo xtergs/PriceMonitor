@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using FinanceMonitor.Identity.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using FinanceMonitor.Identity.Models;
 
 namespace FinanceMonitor.Identity.Data
 {

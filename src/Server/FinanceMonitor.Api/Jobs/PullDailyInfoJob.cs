@@ -23,26 +23,21 @@ namespace FinanceMonitor.Api.Jobs
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _apiService = apiService ?? throw new ArgumentNullException(nameof(apiService));
         }
-        
+
         public async Task Execute(IJobExecutionContext context)
         {
             var stocks = await _repository.GetStocks();
 
-            if (stocks.Count == 0)
-            {
-                return;
-            }
+            if (stocks.Count == 0) return;
 
             foreach (var stock in stocks)
             {
                 var apiInfo = await _apiService.GetDailyStock(stock.Symbol);
 
                 if (apiInfo.MarketState == "POST") //closed
-                {
                     continue;
-                }
-                
-                await _repository.AddDailyPrice(new PriceDaily()
+
+                await _repository.AddDailyPrice(new PriceDaily
                 {
                     Ask = apiInfo.Ask,
                     Bid = apiInfo.Bid,
@@ -51,7 +46,7 @@ namespace FinanceMonitor.Api.Jobs
                     StockId = stock.Id,
                     Time = apiInfo.Time,
                     Price = apiInfo.Price,
-                    Volume =  apiInfo.Volume,
+                    Volume = apiInfo.Volume
                 });
             }
         }

@@ -3,32 +3,40 @@
 
 
 using System;
-using IdentityServer4.Models;
 using System.Collections.Generic;
+using IdentityServer4.Models;
 
 namespace FinanceMonitor.Identity
 {
     public static class Config
     {
+        public static ApiResource[] ApiResources =
+        {
+            new("api", new[] {"openid", "profile"})
+            {
+                Scopes = new List<string> {"scope2"}
+            }
+        };
+
         public static IEnumerable<IdentityResource> IdentityResources =>
             new IdentityResource[]
             {
                 new IdentityResources.OpenId(),
-                new IdentityResources.Profile(),
+                new IdentityResources.Profile()
             };
 
         public static IEnumerable<ApiScope> ApiScopes =>
-            new ApiScope[]
+            new[]
             {
-                new ApiScope("scope1"),
-                new ApiScope("scope2"),
+                new("scope1"),
+                new ApiScope("scope2")
             };
 
         public static IEnumerable<Client> Clients =>
-            new Client[]
+            new[]
             {
                 // m2m client credentials flow client
-                new Client
+                new()
                 {
                     ClientId = "m2m.client",
                     ClientName = "Client Credentials Client",
@@ -62,9 +70,9 @@ namespace FinanceMonitor.Identity
 
                     AllowOfflineAccess = true,
                     AllowedScopes = {"openid", "profile", "scope2"},
-                    AccessTokenLifetime = (int)TimeSpan.FromDays(10).TotalSeconds
+                    AccessTokenLifetime = (int) TimeSpan.FromDays(10).TotalSeconds
                 },
-                
+
                 new Client
                 {
                     ClientId = "swagger",
@@ -80,16 +88,8 @@ namespace FinanceMonitor.Identity
 
                     AllowOfflineAccess = true,
                     AllowedScopes = {"scope2"},
-                    AccessTokenLifetime = (int)TimeSpan.FromDays(10).TotalSeconds
+                    AccessTokenLifetime = (int) TimeSpan.FromDays(10).TotalSeconds
                 }
             };
-
-        public static ApiResource[] ApiResources = new[]
-        {
-            new ApiResource("api", new[] {"openid", "profile"})
-            {
-                Scopes = new List<string>(){"scope2"}
-            }
-        };
     }
 }

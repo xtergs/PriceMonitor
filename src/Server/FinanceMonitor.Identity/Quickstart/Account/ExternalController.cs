@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using FinanceMonitor.Identity.Models;
 using IdentityModel;
 using IdentityServer4;
 using IdentityServer4.Events;
 using IdentityServer4.Services;
 using IdentityServer4.Stores;
-using FinanceMonitor.Identity.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -22,12 +22,12 @@ namespace IdentityServerHost.Quickstart.UI
     [AllowAnonymous]
     public class ExternalController : Controller
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly IIdentityServerInteractionService _interaction;
         private readonly IClientStore _clientStore;
         private readonly IEventService _events;
+        private readonly IIdentityServerInteractionService _interaction;
         private readonly ILogger<ExternalController> _logger;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         public ExternalController(
             UserManager<ApplicationUser> userManager,
@@ -46,7 +46,7 @@ namespace IdentityServerHost.Quickstart.UI
         }
 
         /// <summary>
-        /// initiate roundtrip to external authentication provider
+        ///     initiate roundtrip to external authentication provider
         /// </summary>
         [HttpGet]
         public IActionResult Challenge(string scheme, string returnUrl)
@@ -55,10 +55,8 @@ namespace IdentityServerHost.Quickstart.UI
 
             // validate returnUrl - either it is a valid OIDC URL or back to a local page
             if (Url.IsLocalUrl(returnUrl) == false && _interaction.IsValidReturnUrl(returnUrl) == false)
-            {
                 // user might have clicked on a malicious link - should be logged
                 throw new Exception("invalid return URL");
-            }
 
             // start challenge and roundtrip the return URL and scheme 
             var props = new AuthenticationProperties
@@ -67,7 +65,7 @@ namespace IdentityServerHost.Quickstart.UI
                 Items =
                 {
                     {"returnUrl", returnUrl},
-                    {"scheme", scheme},
+                    {"scheme", scheme}
                 }
             };
 
@@ -75,7 +73,7 @@ namespace IdentityServerHost.Quickstart.UI
         }
 
         /// <summary>
-        /// Post processing of external authentication
+        ///     Post processing of external authentication
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> Callback()
@@ -83,10 +81,7 @@ namespace IdentityServerHost.Quickstart.UI
             // read external identity from the temporary cookie
             var result =
                 await HttpContext.AuthenticateAsync(IdentityServerConstants.ExternalCookieAuthenticationScheme);
-            if (result?.Succeeded != true)
-            {
-                throw new Exception("External authentication error");
-            }
+            if (result?.Succeeded != true) throw new Exception("External authentication error");
 
             if (_logger.IsEnabled(LogLevel.Debug))
             {
@@ -97,12 +92,10 @@ namespace IdentityServerHost.Quickstart.UI
             // lookup our user and external provider info
             var (user, provider, providerUserId, claims) = await FindUserFromExternalProviderAsync(result);
             if (user == null)
-            {
                 // this might be where you might initiate a custom workflow for user registration
                 // in this sample we don't show how that would be done, as our sample implementation
                 // simply auto-provisions new external user
                 user = await AutoProvisionUserAsync(provider, providerUserId, claims);
-            }
 
             // this allows us to collect any additional claims or properties
             // for the specific protocols used and store them in the local auth cookie.
@@ -139,14 +132,10 @@ namespace IdentityServerHost.Quickstart.UI
                 context?.Client.ClientId));
 
             if (context != null)
-            {
                 if (context.IsNativeClient())
-                {
                     // The client is native, so this change in how to
                     // return the response is for better UX for the end user.
                     return this.LoadingPage("Redirect", returnUrl);
-                }
-            }
 
             return Redirect(returnUrl);
         }
@@ -196,30 +185,20 @@ namespace IdentityServerHost.Quickstart.UI
                 var last = claims.FirstOrDefault(x => x.Type == JwtClaimTypes.FamilyName)?.Value ??
                            claims.FirstOrDefault(x => x.Type == ClaimTypes.Surname)?.Value;
                 if (first != null && last != null)
-                {
                     filtered.Add(new Claim(JwtClaimTypes.Name, first + " " + last));
-                }
                 else if (first != null)
-                {
                     filtered.Add(new Claim(JwtClaimTypes.Name, first));
-                }
-                else if (last != null)
-                {
-                    filtered.Add(new Claim(JwtClaimTypes.Name, last));
-                }
+                else if (last != null) filtered.Add(new Claim(JwtClaimTypes.Name, last));
             }
 
             // email
             var email = claims.FirstOrDefault(x => x.Type == JwtClaimTypes.Email)?.Value ??
                         claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
-            if (email != null)
-            {
-                filtered.Add(new Claim(JwtClaimTypes.Email, email));
-            }
+            if (email != null) filtered.Add(new Claim(JwtClaimTypes.Email, email));
 
             var user = new ApplicationUser
             {
-                UserName = Guid.NewGuid().ToString(),
+                UserName = Guid.NewGuid().ToString()
             };
             var identityResult = await _userManager.CreateAsync(user);
             if (!identityResult.Succeeded) throw new Exception(identityResult.Errors.First().Description);
@@ -245,17 +224,12 @@ namespace IdentityServerHost.Quickstart.UI
             // if the external system sent a session id claim, copy it over
             // so we can use it for single sign-out
             var sid = externalResult.Principal.Claims.FirstOrDefault(x => x.Type == JwtClaimTypes.SessionId);
-            if (sid != null)
-            {
-                localClaims.Add(new Claim(JwtClaimTypes.SessionId, sid.Value));
-            }
+            if (sid != null) localClaims.Add(new Claim(JwtClaimTypes.SessionId, sid.Value));
 
             // if the external provider issued an id_token, we'll keep it for signout
             var idToken = externalResult.Properties.GetTokenValue("id_token");
             if (idToken != null)
-            {
                 localSignInProps.StoreTokens(new[] {new AuthenticationToken {Name = "id_token", Value = idToken}});
-            }
         }
     }
 }

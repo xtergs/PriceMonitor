@@ -13,6 +13,5 @@ namespace FinanceMonitor.DAL.Models
         public double Volume { get; set; }
         public double Price { get; set; }
         public DateTime Time { get; set; }
-        
     }
 }

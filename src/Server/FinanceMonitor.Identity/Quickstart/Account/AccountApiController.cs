@@ -13,9 +13,9 @@ namespace IdentityServerHost.Quickstart.UI
     [Route("api/Account/[action]")]
     public class AccountApiController : ControllerBase
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IBus _bus;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         public AccountApiController(UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
@@ -30,26 +30,25 @@ namespace IdentityServerHost.Quickstart.UI
         [HttpPost("Register")]
         public async Task<RegisterResponseViewModel> Register(RegisterViewModel request)
         {
-
             var isPasswordValid = await ValidatePassword(request.Password);
 
             if (!isPasswordValid)
                 throw new Exception("Password is not valid");
-            
-            var newUser = new ApplicationUser()
+
+            var newUser = new ApplicationUser
             {
                 Email = request.Email,
                 UserName = request.Email
             };
-            var user= await _userManager.CreateAsync(newUser);
+            var user = await _userManager.CreateAsync(newUser);
             if (!user.Succeeded)
                 throw new Exception("Failed to create user");
-            
+
             await _userManager.AddPasswordAsync(newUser, request.Password);
-            await _bus.Send(new UserCreated()
+            await _bus.Send(new UserCreated
             {
                 Email = newUser.Email,
-                UserId = newUser.Id,
+                UserId = newUser.Id
             });
 
             return new RegisterResponseViewModel();
