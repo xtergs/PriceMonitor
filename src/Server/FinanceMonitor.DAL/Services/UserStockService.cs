@@ -51,7 +51,7 @@ namespace FinanceMonitor.DAL.Services
             var addedPricing = await _repository.AddUserPrice(new UserPrice()
             {
                 StockId = existingStock.Id,
-                UserId = Guid.Empty,
+                UserId = price.UserId,
                 Price = price.Price,
                 Count = price.Count,
                 DateTime = price.DateTime,
@@ -60,14 +60,14 @@ namespace FinanceMonitor.DAL.Services
             return addedPricing;
         }
 
-        public async Task<IReadOnlyCollection<UserPrice>> GetUserStockPrices(Guid userId, Guid stockId)
+        public async Task<IReadOnlyCollection<UserPrice>> GetUserStockPrices(string userId, string symbol)
         {
-            return (await _repository.GetUserStockPrices(Guid.Empty, stockId)).ToArray();
+            return (await _repository.GetUserStockPrices(userId, symbol)).ToArray();
         }
 
-        public async Task<IReadOnlyCollection<UserSock>> GetUserStocks(Guid userId)
+        public async Task<IReadOnlyCollection<UserStock>> GetUserStocks(string userId)
         {
-            return (await _repository.GetUserStocks(Guid.Empty)).ToArray();
+            return (await _repository.GetUserStocks(userId)).ToArray();
         }
     }
 }

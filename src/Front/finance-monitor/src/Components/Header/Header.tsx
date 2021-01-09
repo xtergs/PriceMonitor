@@ -1,8 +1,9 @@
 import * as React from "react";
 import {useContext} from "react";
 import {DefaultButton, Stack, Text} from '@fluentui/react'
-import {AppContext, GetManager} from "../../App";
+import {AppContext} from "../../App";
 import {Link} from "react-router-dom";
+import {GetManager} from "../../OidcConfig";
 
 export const Header = () => {
 

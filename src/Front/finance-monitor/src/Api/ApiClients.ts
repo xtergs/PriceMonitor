@@ -7,12 +7,34 @@
 //----------------------
 // ReSharper disable InconsistentNaming
 
-export class ApiClient {
+import {GetManager} from "../OidcConfig";
+export class AuthorizedApiBase {
+    private readonly config: IConfig;
+
+    protected constructor(config: IConfig) {
+        this.config = config;
+    }
+
+    protected transformOptions = async (options: RequestInit): Promise<RequestInit> => {
+        const user = await GetManager().getUser();
+        if (user) {
+            const token = `${user.token_type} ${user.access_token}`;
+            options.headers = {
+                ...options.headers,
+                Authorization: token,
+            };
+        }
+        return Promise.resolve(options);
+    };
+}
+
+export class ApiClient extends AuthorizedApiBase {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
 
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+    constructor(configuration: IConfig, baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        super(configuration);
         this.http = http ? http : <any>window;
         this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
     }
@@ -34,7 +56,9 @@ export class ApiClient {
             }
         };
 
-        return this.http.fetch(url_, options_).then((_response: Response) => {
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
             return this.processGetStockDetails(_response);
         });
     }
@@ -68,7 +92,9 @@ export class ApiClient {
             }
         };
 
-        return this.http.fetch(url_, options_).then((_response: Response) => {
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
             return this.processFillDb(_response);
         });
     }
@@ -79,6 +105,14 @@ export class ApiClient {
         if (status === 200) {
             return response.text().then((_responseText) => {
             return;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
             });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
@@ -103,7 +137,9 @@ export class ApiClient {
             }
         };
 
-        return this.http.fetch(url_, options_).then((_response: Response) => {
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
             return this.processTestAuth(_response);
         });
     }
@@ -117,6 +153,14 @@ export class ApiClient {
             result200 = _responseText === "" ? null : <boolean>JSON.parse(_responseText, this.jsonParseReviver);
             return result200;
             });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -126,12 +170,13 @@ export class ApiClient {
     }
 }
 
-export class StockClient {
+export class StockClient extends AuthorizedApiBase {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
 
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+    constructor(configuration: IConfig, baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        super(configuration);
         this.http = http ? http : <any>window;
         this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
     }
@@ -139,7 +184,7 @@ export class StockClient {
     /**
      * @return Success
      */
-    list(signal?: AbortSignal | undefined): Promise<Stock[]> {
+    list(signal?: AbortSignal | undefined): Promise<StockListItemDto[]> {
         let url_ = this.baseUrl + "/Stock/list";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -151,18 +196,20 @@ export class StockClient {
             }
         };
 
-        return this.http.fetch(url_, options_).then((_response: Response) => {
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
             return this.processList(_response);
         });
     }
 
-    protected processList(response: Response): Promise<Stock[]> {
+    protected processList(response: Response): Promise<StockListItemDto[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
-            result200 = _responseText === "" ? null : <Stock[]>JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = _responseText === "" ? null : <StockListItemDto[]>JSON.parse(_responseText, this.jsonParseReviver);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -170,7 +217,7 @@ export class StockClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<Stock[]>(<any>null);
+        return Promise.resolve<StockListItemDto[]>(<any>null);
     }
 
     /**
@@ -191,7 +238,9 @@ export class StockClient {
             }
         };
 
-        return this.http.fetch(url_, options_).then((_response: Response) => {
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
             return this.processStock(_response);
         });
     }
@@ -214,13 +263,28 @@ export class StockClient {
     }
 
     /**
+     * @param type (optional) 
+     * @param start (optional) 
+     * @param end (optional) 
      * @return Success
      */
-    history(symbol: string | null, signal?: AbortSignal | undefined): Promise<PriceHistory[]> {
-        let url_ = this.baseUrl + "/Stock/{symbol}/history";
+    history(symbol: string | null, type: HistoryType | undefined, start: Date | undefined, end: Date | undefined, signal?: AbortSignal | undefined): Promise<PriceHistory[]> {
+        let url_ = this.baseUrl + "/Stock/{symbol}/history?";
         if (symbol === undefined || symbol === null)
             throw new Error("The parameter 'symbol' must be defined.");
         url_ = url_.replace("{symbol}", encodeURIComponent("" + symbol));
+        if (type === null)
+            throw new Error("The parameter 'type' cannot be null.");
+        else if (type !== undefined)
+            url_ += "type=" + encodeURIComponent("" + type) + "&";
+        if (start === null)
+            throw new Error("The parameter 'start' cannot be null.");
+        else if (start !== undefined)
+            url_ += "start=" + encodeURIComponent(start ? "" + start.toJSON() : "") + "&";
+        if (end === null)
+            throw new Error("The parameter 'end' cannot be null.");
+        else if (end !== undefined)
+            url_ += "end=" + encodeURIComponent(end ? "" + end.toJSON() : "") + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ = <RequestInit>{
@@ -231,7 +295,9 @@ export class StockClient {
             }
         };
 
-        return this.http.fetch(url_, options_).then((_response: Response) => {
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
             return this.processHistory(_response);
         });
     }
@@ -271,7 +337,9 @@ export class StockClient {
             }
         };
 
-        return this.http.fetch(url_, options_).then((_response: Response) => {
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
             return this.processDaily(_response);
         });
     }
@@ -294,12 +362,13 @@ export class StockClient {
     }
 }
 
-export class UserPricingClient {
+export class UserPricingClient extends AuthorizedApiBase {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
 
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+    constructor(configuration: IConfig, baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        super(configuration);
         this.http = http ? http : <any>window;
         this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
     }
@@ -324,7 +393,9 @@ export class UserPricingClient {
             }
         };
 
-        return this.http.fetch(url_, options_).then((_response: Response) => {
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
             return this.processUserPricing(_response);
         });
     }
@@ -338,6 +409,14 @@ export class UserPricingClient {
             result200 = _responseText === "" ? null : <UserPrice>JSON.parse(_responseText, this.jsonParseReviver);
             return result200;
             });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -349,11 +428,8 @@ export class UserPricingClient {
     /**
      * @return Success
      */
-    list(stockId: string, signal?: AbortSignal | undefined): Promise<UserPrice[]> {
-        let url_ = this.baseUrl + "/UserPricing/{stockId}/list";
-        if (stockId === undefined || stockId === null)
-            throw new Error("The parameter 'stockId' must be defined.");
-        url_ = url_.replace("{stockId}", encodeURIComponent("" + stockId));
+    list(signal?: AbortSignal | undefined): Promise<UserStock[]> {
+        let url_ = this.baseUrl + "/UserPricing/list";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ = <RequestInit>{
@@ -364,12 +440,64 @@ export class UserPricingClient {
             }
         };
 
-        return this.http.fetch(url_, options_).then((_response: Response) => {
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
             return this.processList(_response);
         });
     }
 
-    protected processList(response: Response): Promise<UserPrice[]> {
+    protected processList(response: Response): Promise<UserStock[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : <UserStock[]>JSON.parse(_responseText, this.jsonParseReviver);
+            return result200;
+            });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UserStock[]>(<any>null);
+    }
+
+    /**
+     * @return Success
+     */
+    shares(symbol: string | null, signal?: AbortSignal | undefined): Promise<UserPrice[]> {
+        let url_ = this.baseUrl + "/UserPricing/{symbol}/shares";
+        if (symbol === undefined || symbol === null)
+            throw new Error("The parameter 'symbol' must be defined.");
+        url_ = url_.replace("{symbol}", encodeURIComponent("" + symbol));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ = <RequestInit>{
+            method: "GET",
+            signal,
+            headers: {
+                "Accept": "text/plain"
+            }
+        };
+
+        return this.transformOptions(options_).then(transformedOptions_ => {
+            return this.http.fetch(url_, transformedOptions_);
+        }).then((_response: Response) => {
+            return this.processShares(_response);
+        });
+    }
+
+    protected processShares(response: Response): Promise<UserPrice[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -378,6 +506,14 @@ export class UserPricingClient {
             result200 = _responseText === "" ? null : <UserPrice[]>JSON.parse(_responseText, this.jsonParseReviver);
             return result200;
             });
+        } else if (status === 401) {
+            return response.text().then((_responseText) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            return throwException("Forbidden", status, _responseText, _headers);
+            });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -385,6 +521,22 @@ export class UserPricingClient {
         }
         return Promise.resolve<UserPrice[]>(<any>null);
     }
+}
+
+export interface StockListItemDto {
+    symbol: string | null;
+    market: string | null;
+    timezone: string | null;
+    time: Date;
+    longName: string | null;
+    shortName: string | null;
+    language: string | null;
+    currency: string | null;
+    financialCurrency: string | null;
+    quoteType: string | null;
+    currentPrice: number;
+    currentVolume: number;
+    currentTime: Date;
 }
 
 export interface Stock {
@@ -399,6 +551,12 @@ export interface Stock {
     currency: string | null;
     financialCurrency: string | null;
     quoteType: string | null;
+}
+
+export enum HistoryType {
+    Day = "Day",
+    Month = "Month",
+    Year = "Year",
 }
 
 export interface PriceHistory {
@@ -425,7 +583,7 @@ export interface PriceDaily {
 }
 
 export interface AddUserPriceDto {
-    userId: string;
+    userId: string | null;
     symbol: string | null;
     price: number;
     count: number;
@@ -434,11 +592,20 @@ export interface AddUserPriceDto {
 
 export interface UserPrice {
     id: string;
-    userId: string;
+    userId: string | null;
     stockId: string;
     price: number;
     count: number;
     dateTime: Date;
+}
+
+export interface UserStock {
+    id: string;
+    symbol: string | null;
+    shares: number;
+    shortName: string | null;
+    longName: string | null;
+    total: number;
 }
 
 export class ApiException extends Error {
@@ -470,4 +637,17 @@ function throwException(message: string, status: number, response: string, heade
         throw result;
     else
         throw new ApiException(message, status, response, headers, null);
+}
+
+/**
+ * Configuration class needed in base class.
+ * The config is provided to the API client at initialization time.
+ * API clients inherit from #AuthorizedApiBase and provide the config.
+ */
+export class IConfig {
+    /**
+     * Returns a valid value for the Authorization header.
+     * Used to dynamically inject the current auth header.
+     */
+    //getAuthorization!: () => 'the-authentication-token';
 }

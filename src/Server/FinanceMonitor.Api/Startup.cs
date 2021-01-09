@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Dapper;
+using FinanceMonitor.Api.Filters;
 using FinanceMonitor.Api.Jobs;
 using FinanceMonitor.Api.MessageHandlers;
 using FinanceMonitor.Api.Models;
@@ -67,11 +69,45 @@ namespace FinanceMonitor.Api
             services.AddScoped<IUserRepository, UserRepository>();
 
 
-            services.AddControllers();
+            services.AddControllers()
+                .AddJsonOptions(opts =>
+                {
+                    opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                });
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo {Title = "FinanceMonitor.Api", Version = "v1"});
+                c.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+                {
+                    Type = SecuritySchemeType.OAuth2,
+                    Flows = new OpenApiOAuthFlows
+                    {
+                        AuthorizationCode = new OpenApiOAuthFlow
+                        {
+                            AuthorizationUrl = new Uri("https://localhost:5002/connect/authorize"),
+                            TokenUrl = new Uri("https://localhost:5002/connect/token"),
+                            Scopes = new Dictionary<string, string>
+                            {
+                                {"scope2", "swagger api"}
+                            }
+                        }
+                    }
+                });
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Description = @"JWT Authorization header using the Bearer scheme. \r\n\r\n 
+                      Enter 'Bearer' [space] and then your token in the text input below.
+                      \r\n\r\nExample: 'Bearer 12345abcdef'",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer"
+                });
+                c.OperationFilter<AuthorizeCheckOperationFilter>();
+                
             });
+            
+            
 
             services.AddQuartz(x =>
             {
@@ -125,7 +161,14 @@ namespace FinanceMonitor.Api
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "FinanceMonitor.Api v1"));
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "FinanceMonitor.Api v1");
+                    c.OAuthClientId("swagger");
+                    c.OAuthAppName("Demo API - Swagger");
+                    c.OAuthClientSecret("49C1A7E1-0C79-4A89-A3D6-A37998FB86B0");
+                    c.OAuthUsePkce();
+                });
             }
             
             app.ApplicationServices.UseRebus(async bus =>

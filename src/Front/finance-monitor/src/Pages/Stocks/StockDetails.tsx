@@ -2,7 +2,7 @@ import * as React from "react";
 import {useEffect, useState} from "react";
 import {Link, useParams} from "react-router-dom";
 import {Stock, StockClient} from "../../Api/ApiClients";
-import {ProgressIndicator} from "@fluentui/react";
+import {ProgressIndicator, Stack} from "@fluentui/react";
 import {host} from "../../Api/Consts";
 
 interface IProps {
@@ -16,12 +16,12 @@ export const StockDetails = (props: IProps) => {
     const [stock, setStock] = useState<Stock | null>(null)
 
     useEffect(() => {
-        new StockClient(host).stock(symbol)
+        new StockClient({},host).stock(symbol)
             .then(x => {
                 setStock(x);
             })
             .finally(() => setLoading(false))
-    })
+    }, [])
 
     if (loading) {
         return <ProgressIndicator label={"Loading"}/>
@@ -32,6 +32,7 @@ export const StockDetails = (props: IProps) => {
     }
 
     return (<>
+        <Stack>
         <h3>{stock.longName ?? stock.shortName}</h3>
         <table>
             <tr>
@@ -60,7 +61,9 @@ export const StockDetails = (props: IProps) => {
                 <td>{stock.id}</td>
             </tr>
         </table>
+
         <Link to={`${stock.symbol}/history`}>Show history</Link>
         <Link to={`${stock.symbol}/daily`}>Show daily</Link>
+        </Stack>
     </>)
 }

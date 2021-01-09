@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using FinanceMonitor.DAL.Dto;
+using FinanceMonitor.DAL.Enums;
 using FinanceMonitor.DAL.Models;
 using FinanceMonitor.DAL.Repositories.Interfaces;
 using Microsoft.Data.SqlClient;
@@ -25,8 +26,7 @@ namespace FinanceMonitor.DAL.Repositories
         {
             await using var db = new SqlConnection(_options.ConnectionString);
 
-            var stock = await db.QueryFirstOrDefaultAsync<Stock>(@"select * from Stock
-            where Symbol = @Symbol", new
+            var stock = await db.QueryFirstOrDefaultAsync<Stock>(@"exec dbo.GetStock @Symbol", new
             {
                 Symbol = symbol
             });
@@ -39,11 +39,8 @@ namespace FinanceMonitor.DAL.Repositories
             await using var db = new SqlConnection(_options.ConnectionString);
 
             var inserted = await db.QueryFirstAsync<Stock>(
-                @"Insert into Stock (Symbol, Market, Timezone, Time, ShortName, LongName, Currency, FinancialCurrency, 
-                   Language, QuoteType )
-Output  Inserted.* 
-values (@Symbol, @Market, @Timezone, @Time, @ShortName, @LongName, @Currency, @FinancialCurrency, 
-        @Language, @QuoteType)", stock);
+                @"exec dbo.AddStock @Symbol, @Market, @Timezone, @Time, @ShortName, @LongName, @Currency, 
+ @FinancialCurrency, @Language, @QuoteType", stock);
             return inserted;
         }
 
@@ -52,36 +49,30 @@ values (@Symbol, @Market, @Timezone, @Time, @ShortName, @LongName, @Currency, @F
             await using var db = GetConnection();
 
             var inserted = await db.QueryFirstAsync<UserPrice>(
-                @"Insert into UserPrice(UserId, StockId, Price, Count, DateTime)
- OUTPUT Inserted.*
- values (@UserId, @StockId, @Price, @Count, @DateTime)", price);
+                @"exec dbo.AddUserPrice @UserId, @StockId, @Price, @Count, @DateTime", price);
 
             return inserted;
         }
 
-        public async Task<ICollection<UserPrice>> GetUserStockPrices(Guid userId, Guid stockId)
+        public async Task<ICollection<UserPrice>> GetUserStockPrices(string userId, string symbol)
         {
             await using var db = GetConnection();
 
-            var collection = await db.QueryAsync<UserPrice>(@"select * from UserPrice
-where UserId = @UserId and StockId = @StockId", new
+            var collection = await db.QueryAsync<UserPrice>(@"exec dbo.GetUserStockPrices  @UserId, @Symbol", new
             {
                 UserId = userId,
-                StockId = stockId
+                Symbol = symbol
             });
 
             return collection.ToArray();
         }
 
-        public async Task<ICollection<UserSock>> GetUserStocks(Guid userId)
+        public async Task<ICollection<UserStock>> GetUserStocks(string userId)
         {
             await using var db = GetConnection();
 
-            var collection = await db.QueryAsync<UserSock>(
-                @"select s.Id, s.Symbol, Count(UP.Id) as Count from Stock as s
-inner join UserPrice UP on s.Id = UP.StockId
-where UP.UserId = @UserId
-group by s.Id, s.Symbol", new
+            var collection = await db.QueryAsync<UserStock>(
+                @"exec dbo.GetUserStocks @UserId", new
                 {
                     UserId = userId
                 });
@@ -104,8 +95,8 @@ where PH.Id is null");
         {
             var db = GetConnection();
 
-            var result =  await db.ExecuteAsync(@"Insert into PriceHistory (StockId, Volume, Opened, Closed, High, Low, DateTime) 
-values (@StockId, @Volume, @Opened, @Closed, @High, @Low, @DateTime)",
+            var result =  await db.ExecuteAsync(@"exec dbo.InsertHistory
+ @StockId, @Volume, @Opened, @Closed, @High, @Low, @DateTime",
                 history);
 
             var inserted = result;
@@ -116,9 +107,8 @@ values (@StockId, @Volume, @Opened, @Closed, @High, @Low, @DateTime)",
             var db = GetConnection();
 
             var result = await db.ExecuteAsync(
-                @"Insert into PriceDaily (StockId, Ask, Bid, AskSize, BidSize, Time,
-                        Price, Volume) 
-values (@StockId, @Ask, @Bid, @AskSize, @BidSize, @Time, @Price, @Volume)", price);
+                @"exec dbo.AddDailyPrice
+ @StockId, @Ask, @Bid, @AskSize, @BidSize, @Time, @Price, @Volume", price);
         }
 
         public async Task<ICollection<ShortStockInfo>> GetStocks()
@@ -131,25 +121,29 @@ values (@StockId, @Ask, @Bid, @AskSize, @BidSize, @Time, @Price, @Volume)", pric
             return result.ToArray();
         }
         
-        public async Task<ICollection<Stock>> GetSavedStocks()
+        public async Task<ICollection<StockListItemDto>> GetSavedStocks()
         {
             var db = GetConnection();
 
-            var result = await db.QueryAsync<Stock>(
-                @"select S.* from Stock as S");
+            var result = await db.QueryAsync<StockListItemDto>(
+                @"exec dbo.GetSavedStocks");
 
             return result.ToArray();
         }
 
-        public async Task<ICollection<PriceHistory>> GetStockHistory(string stockId)
+        public async Task<ICollection<PriceHistory>> GetStockHistory(string symbol,
+            HistoryType type,
+            DateTime start = default, DateTime end= default)
         {
             var db = GetConnection();
 
             var result = await db.QueryAsync<PriceHistory>(
-                @"exec dbo.GetStock @StockId , @Time", new
+                @"exec dbo.GetStockHistory @Symbol , @Type, @Start, @End", new
                 {
-                    StockId = stockId,
-                    Time = DateTime.UtcNow.AddDays(-90)
+                    Symbol = symbol,
+                    Type = type,
+                    Start = start,
+                    End = end
                 });
 
             return result.ToArray();

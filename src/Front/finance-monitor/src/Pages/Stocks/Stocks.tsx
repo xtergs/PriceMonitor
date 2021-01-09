@@ -1,7 +1,7 @@
 import * as React from 'react'
 import {useEffect} from 'react'
 import {DetailsList, ProgressIndicator, SelectionMode} from "@fluentui/react";
-import {Stock, StockClient} from "../../Api/ApiClients";
+import {Stock, StockClient, StockListItemDto} from "../../Api/ApiClients";
 import {host} from "../../Api/Consts";
 import { useHistory } from 'react-router-dom';
 
@@ -14,10 +14,10 @@ export const Stocks = (props: IProps) => {
     const history = useHistory();
 
     const [isLoading, setLoading] = React.useState(true);
-    const [stocks, setStocks] = React.useState<Stock[]>([])
+    const [stocks, setStocks] = React.useState<StockListItemDto[]>([])
 
     useEffect(() => {
-        new StockClient(host).list()
+        new StockClient({},host).list()
             .then(stocks => {
                 setStocks(stocks);
             })

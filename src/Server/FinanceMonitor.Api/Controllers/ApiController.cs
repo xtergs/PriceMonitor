@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using FinanceMonitor.Api.Extensions;
 using FinanceMonitor.DAL.Dto;
 using FinanceMonitor.DAL.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -30,6 +31,7 @@ namespace FinanceMonitor.Api.Controllers
             return result[symbol].Fields;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task FillDb()
         {
@@ -39,7 +41,7 @@ namespace FinanceMonitor.Api.Controllers
                 Price = 56,
                 Count = 1,
                 DateTime = DateTime.UtcNow,
-                UserId = Guid.Empty
+                UserId = this.UserId()
             });
         }
 

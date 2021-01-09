@@ -16,7 +16,7 @@ namespace FinanceMonitor.Api
         public static async Task Main(string[] args)
         {
             var host = CreateHostBuilder(args).Build();
-            await Migrate(host);
+            //await Migrate(host);
             await host.RunAsync();
         }
 

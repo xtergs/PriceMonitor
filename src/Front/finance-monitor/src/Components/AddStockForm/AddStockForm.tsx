@@ -1,12 +1,12 @@
 import * as React from "react";
-import {Stock} from "../../Models/Stock";
-import {Stack, TextField, DefaultButton} from '@fluentui/react';
 import {useState} from "react";
-import {Api} from "../../Api/Api";
+import {DatePicker, DefaultButton, Stack, TextField} from '@fluentui/react';
+import {UserPrice, UserPricingClient} from "../../Api/ApiClients";
+import {host} from "../../Api/Consts";
 
 
 interface IProps {
-    onStockAdded: (stock: Stock) => void
+    onStockAdded: (stock: UserPrice) => void
 }
 
 export const AddStockForm = (props: IProps) => {
@@ -15,17 +15,24 @@ export const AddStockForm = (props: IProps) => {
     const [symbol, setSymbol] = useState('');
     const [price, setPrice] = useState(0);
     const [count, setCount] = useState(1);
+    const [date, setDate] = useState(new Date());
 
-    const updateSymbol = (newValue:any)=>{
+    const updateSymbol = (e: any, newValue: any) => {
         setSymbol(newValue);
     }
 
-    const updatePrice = (newValue:any)=>{
+    const updatePrice = (e: any,newValue: any) => {
         setPrice(parseInt(newValue))
     }
 
-    const updateCount = (newValue:any)=>{
+    const updateCount = (e: any,newValue: any) => {
         setCount(parseInt(newValue))
+    }
+
+    const updateDate = (newDate?: Date | null) => {
+        if (!newDate)
+            return;
+        setDate(newDate)
     }
 
     const add = async () => {
@@ -35,7 +42,13 @@ export const AddStockForm = (props: IProps) => {
         try {
             setSubmitting(true);
 
-            const stock = await Api.addStock(symbol, price, count);
+            const stock = await new UserPricingClient({}, host).userPricing({
+                count: count,
+                dateTime: date,
+                price: price,
+                symbol: symbol,
+                userId: ''
+            });
             props.onStockAdded(stock);
         } finally {
             setSubmitting(false)
@@ -43,9 +56,10 @@ export const AddStockForm = (props: IProps) => {
     }
 
     return (<Stack>
-<TextField label={"Symbol"} onChange={updateSymbol} />
-<TextField label={"Price"} onChange={updatePrice}/>
-<TextField label={"Count"} onChange={updateCount} />
-<DefaultButton text={"Add"} disabled={isSubmitting} onClick={add}/>
+        <TextField label={"Symbol"} onChange={updateSymbol}/>
+        <TextField label={"Price"} onChange={updatePrice}/>
+        <TextField label={"Count"} onChange={updateCount}/>
+        <DatePicker label={"Date"} onSelectDate={updateDate}/>
+        <DefaultButton text={"Add"} disabled={isSubmitting} onClick={add}/>
     </Stack>)
 }

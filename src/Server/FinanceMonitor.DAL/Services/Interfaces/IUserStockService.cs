@@ -9,7 +9,7 @@ namespace FinanceMonitor.DAL.Services.Interfaces
     public interface IUserStockService
     {
         Task<UserPrice> AddUserPrice(AddUserPriceDto price);
-        Task<IReadOnlyCollection<UserPrice>> GetUserStockPrices(Guid userId, Guid stockId);
-        Task<IReadOnlyCollection<UserSock>> GetUserStocks(Guid userId);
+        Task<IReadOnlyCollection<UserPrice>> GetUserStockPrices(string userId, string symbol);
+        Task<IReadOnlyCollection<UserStock>> GetUserStocks(string userId);
     }
 }

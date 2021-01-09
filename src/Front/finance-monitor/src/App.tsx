@@ -12,21 +12,16 @@ import {ProtectedRoute} from "./Pages/Routes/ProtectedRoute";
 import {StockDetails} from "./Pages/Stocks/StockDetails";
 import {StockHistory} from "./Pages/Stocks/StockHistory";
 import {StockDaily} from "./Pages/Stocks/StockDaily";
+import {ProfileStockDetails} from "./Pages/Profile/ProfileStockDetails";
+import {GetManager} from "./OidcConfig";
+import { initializeIcons } from '@fluentui/react/lib/Icons';
+
 
 const boldStyle = {root: {fontWeight: FontWeights.semibold}};
 
-const manager = new UserManager({
-    client_id: "interactive",
-    client_secret: "49C1A7E1-0C79-4A89-A3D6-A37998FB86B0",
-    scope: "openid profile scope2",
-    authority: "https://localhost:5002",
-    redirect_uri: "http://localhost:3000/signin",
-    response_type: "code",
-    post_logout_redirect_uri: "http://localhost:3000/logout-callback"
 
-});
+initializeIcons();
 
-export const GetManager = () => manager;
 
 export interface IContext {
     user: User | null,
@@ -71,6 +66,9 @@ export const App: React.FunctionComponent = () => {
                     </Route>
                     <ProtectedRoute exact={true} path={"/profile"}>
                         <Profile/>
+                    </ProtectedRoute>
+                    <ProtectedRoute exact={true} path={"/profile/:symbol"}>
+                        <ProfileStockDetails/>
                     </ProtectedRoute>
                     <Route exact={true} path={"/stocks"}>
                         <Stocks/>

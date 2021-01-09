@@ -22,12 +22,12 @@ export const StockDaily = (props: IProps)=>{
 
 
     useEffect(() => {
-        new StockClient(host).daily(symbol)
+        new StockClient({}, host).daily(symbol)
             .then(x => {
                 setHistory(x.map(h => {
                     return {
                         ...h,
-                        time: new Date(h.time),
+                        time: moment.utc(h.time).local().toDate(),
                     }
                 }));
             })

@@ -42,6 +42,7 @@ namespace FinanceMonitor.Identity
             {
                 c.SwaggerDoc("v1", new OpenApiInfo {Title = "FinanceMonitor.Identity", Version = "v1"});
             });
+            
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
@@ -107,7 +108,8 @@ namespace FinanceMonitor.Identity
                 app.UseDatabaseErrorPage();
 
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "FinanceMonitor.Identity v1"));
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "FinanceMonitor.Identity v1")
+                );
             }
 
             app.ApplicationServices.UseRebus();

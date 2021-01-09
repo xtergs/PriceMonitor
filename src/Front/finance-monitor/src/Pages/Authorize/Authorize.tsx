@@ -2,7 +2,8 @@ import * as React from 'react'
 import {useContext, useEffect} from 'react'
 import {PrimaryButton, Separator, Stack, Text} from "@fluentui/react";
 import {Register} from "../Register/Register";
-import {AppContext, GetManager} from "../../App";
+import {AppContext} from "../../App";
+import {GetManager} from "../../OidcConfig";
 
 interface IProps {
 

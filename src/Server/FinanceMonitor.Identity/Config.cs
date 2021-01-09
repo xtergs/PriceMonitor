@@ -64,6 +64,24 @@ namespace FinanceMonitor.Identity
                     AllowedScopes = {"openid", "profile", "scope2"},
                     AccessTokenLifetime = (int)TimeSpan.FromDays(10).TotalSeconds
                 },
+                
+                new Client
+                {
+                    ClientId = "swagger",
+                    ClientSecrets = {new Secret("49C1A7E1-0C79-4A89-A3D6-A37998FB86B0".Sha256())},
+
+                    AllowedGrantTypes = GrantTypes.Code,
+
+                    RedirectUris =
+                    {
+                        "https://localhost:5001/swagger/oauth2-redirect.html"
+                    },
+                    AllowedCorsOrigins = {"https://localhost:5001"},
+
+                    AllowOfflineAccess = true,
+                    AllowedScopes = {"scope2"},
+                    AccessTokenLifetime = (int)TimeSpan.FromDays(10).TotalSeconds
+                }
             };
 
         public static ApiResource[] ApiResources = new[]

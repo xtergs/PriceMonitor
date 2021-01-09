@@ -2,7 +2,13 @@
 -- drop table if exists PriceHistory
 -- drop table if exists UserPrice
 -- drop table if exists Stock
+drop table if exists UserProfile
+create table UserProfile
+(
+    Id nvarchar(512) not null primary key
+)
 
+go
 
 if not exists(select *
               from sys.tables
@@ -31,7 +37,7 @@ if not exists(select *
 create table UserPrice
 (
     Id       uniqueidentifier not null default NEWID(),
-    UserId   uniqueidentifier not null,
+    UserId   nvarchar(512)    not null,
     StockId  uniqueidentifier not null,
 
     Price    money            not null,
@@ -40,7 +46,8 @@ create table UserPrice
 
     constraint UserPrice_PK_Id Primary Key (Id),
 
-    constraint UserPrice_FK_StockId Foreign Key (StockId) REFERENCES Stock (Id)
+    constraint UserPrice_FK_StockId Foreign Key (StockId) REFERENCES Stock (Id),
+    constraint UserPrice_FK_UserId FOREIGN KEY (UserId) References UserProfile (Id)
 
 )
 if not exists(select *

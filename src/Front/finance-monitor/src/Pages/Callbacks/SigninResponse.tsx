@@ -1,8 +1,9 @@
 import * as React from 'react'
 import {User, UserManager} from "oidc-client";
 import {Redirect, useLocation} from 'react-router-dom';
-import {AppContext, GetManager} from "../../App";
+import {AppContext} from "../../App";
 import {ProgressIndicator} from "@fluentui/react";
+import {GetManager} from "../../OidcConfig";
 
 
 export const SigninResponse = () => {

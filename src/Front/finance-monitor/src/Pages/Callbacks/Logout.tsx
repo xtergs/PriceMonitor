@@ -1,7 +1,8 @@
 import * as React from 'react'
-import {AppContext, GetManager} from "../../App";
+import {AppContext} from "../../App";
 import {Redirect, useLocation} from "react-router-dom";
 import {useContext} from "react";
+import {GetManager} from "../../OidcConfig";
 
 export const Logout = ()=>{
 

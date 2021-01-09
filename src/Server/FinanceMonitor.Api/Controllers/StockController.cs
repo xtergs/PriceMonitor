@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using FinanceMonitor.DAL.Enums;
 using FinanceMonitor.DAL.Models;
 using FinanceMonitor.DAL.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +19,7 @@ namespace FinanceMonitor.Api.Controllers
         }
 
         [HttpGet("list")]
-        public async Task<ICollection<Stock>> GetStocks()
+        public async Task<ICollection<StockListItemDto>> GetStocks()
         {
             var stocks = await _repository.GetSavedStocks();
             return stocks;
@@ -32,9 +33,11 @@ namespace FinanceMonitor.Api.Controllers
         }
 
         [HttpGet("{symbol}/history")]
-        public async Task<ICollection<PriceHistory>> GetStockHistory(string symbol)
+        public async Task<ICollection<PriceHistory>> GetStockHistory(string symbol, HistoryType type,
+            DateTime start = default, DateTime end = default)
         {
-            var history = await _repository.GetStockHistory(symbol);
+            var history = await _repository.GetStockHistory(symbol, type,
+                start, end);
 
             return history;
         }
