@@ -12,15 +12,16 @@ using Microsoft.Extensions.Options;
 
 namespace FinanceMonitor.DAL.Repositories
 {
-    public class StockRepository : IStockRepository
+    public class StockRepository : BaseRepository, IStockRepository
     {
         private readonly StockOptions _options;
 
         public StockRepository(IOptions<StockOptions> options)
+            : base(options.Value.ConnectionString)
         {
             _options = options.Value;
         }
-        
+
 
         public async Task<Stock> GetStock(string symbol)
         {
@@ -95,7 +96,7 @@ where PH.Id is null");
         {
             var db = GetConnection();
 
-            var result =  await db.ExecuteAsync(@"exec dbo.InsertHistory
+            var result = await db.ExecuteAsync(@"exec dbo.InsertHistory
  @StockId, @Volume, @Opened, @Closed, @High, @Low, @DateTime",
                 history);
 
@@ -120,7 +121,7 @@ where PH.Id is null");
 
             return result.ToArray();
         }
-        
+
         public async Task<ICollection<StockListItemDto>> GetSavedStocks()
         {
             var db = GetConnection();
@@ -133,7 +134,7 @@ where PH.Id is null");
 
         public async Task<ICollection<PriceHistory>> GetStockHistory(string symbol,
             HistoryType type,
-            DateTime start = default, DateTime end= default)
+            DateTime start = default, DateTime end = default)
         {
             var db = GetConnection();
 
@@ -155,7 +156,7 @@ where PH.Id is null");
 
             var start = date.ToUniversalTime().Date;
             var end = start.AddDays(1);
-            
+
             var result = await db.QueryAsync<PriceDaily>(
                 @"exec dbo.GetStockDaily @Symbol, @Start, @End", new
                 {
@@ -166,8 +167,5 @@ where PH.Id is null");
 
             return result.ToArray();
         }
-
-
-        private SqlConnection GetConnection() => new(_options.ConnectionString);
     }
 }

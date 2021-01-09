@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using FinanceMonitor.Api.Extensions;
 using FinanceMonitor.DAL.Dto;
+using FinanceMonitor.DAL.Repositories.Interfaces;
 using FinanceMonitor.DAL.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -35,7 +36,7 @@ namespace FinanceMonitor.Api.Controllers
         [HttpGet]
         public async Task FillDb()
         {
-            await _service.AddUserPrice(new AddUserPriceDto()
+            await _service.AddUserPrice(new AddUserPriceDto
             {
                 Symbol = "Googl",
                 Price = 56,
@@ -45,11 +46,11 @@ namespace FinanceMonitor.Api.Controllers
             });
         }
 
-        [Authorize]
         [HttpGet]
-        public async Task<bool> TestAuth()
+        public async Task ProcessDailyData([FromServices] IManagementRepository repository)
         {
-            return true;
+            var lastDate = DateTime.UtcNow.Date.AddDays(-1);
+            await repository.ProcessDailyData(lastDate);
         }
     }
 }

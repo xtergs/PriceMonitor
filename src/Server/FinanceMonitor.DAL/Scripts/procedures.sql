@@ -148,7 +148,7 @@ begin
     select S.*, PD.*
     from Stock as S
 
-             join (select rank() over (partition by PD.StockId order by Time Desc) r,
+             join (select row_number() over (partition by PD.StockId order by Time Desc) r,
                           PD.StockId,
                           PD.Price  as                                             CurrentPrice,
                           PD.Time   as                                             CurrentTime,
@@ -166,12 +166,13 @@ create procedure GetStockHistoryYearly @Symbol nvarchar(512),
 as
 begin
     select *
-    from (select Rank() over (partition by StockId, Year(DateTime) order by DateTime desc) as r, PH.*
+    from (select ROW_NUMBER() over (partition by StockId, Year(DateTime) order by DateTime desc) as r, PH.*
           from PriceHistory as PH
                    join Stock on PH.StockId = Stock.Id
           where Stock.Symbol = @Symbol
          ) as PH
-    where PH.r = 1 and DateTime between @End and @Start
+    where PH.r = 1
+      and DateTime between @End and @Start
     order by DateTime asc
 end
 
@@ -184,12 +185,13 @@ create procedure GetStockHistoryMonthly @Symbol nvarchar(512),
 as
 begin
     select *
-    from (select Rank() over (partition by Year(DateTime), Month(DateTime) order by DateTime desc) as r, PH.*
+    from (select ROW_NUMBER() over (partition by Year(DateTime), Month(DateTime) order by DateTime desc) as r, PH.*
           from PriceHistory as PH
                    join Stock on PH.StockId = Stock.Id
           where Stock.Symbol = @Symbol
          ) as PH
-    where PH.r = 1 and DateTime between @End and @Start
+    where PH.r = 1
+      and DateTime between @End and @Start
     order by DateTime asc
 end
 
@@ -217,7 +219,7 @@ create procedure GetStockHistory @Symbol nvarchar(512),
                                  @Start datetime2 = null,
                                  @End datetime2 = null
 as
-begin 
+begin
     if @Type = 0
         exec dbo.GetStockHistoryDaily @Symbol, @Start, @End
     else
@@ -226,3 +228,41 @@ begin
         else
             exec dbo.GetStockHistoryYearly @Symbol, @Start, @End
 end
+go
+
+drop procedure if exists ProcessDailyDataIntoHistory
+go
+
+create procedure ProcessDailyDataIntoHistory
+            @Time date
+as
+begin
+    insert into PriceHistory (StockId, Volume, Opened, Closed, High, Low, DateTime)
+    select StockID,
+           Max(Volume)        as Volume,
+           Max(Opened)        as Opened,
+           Max(Closed)        as Closed,
+           MAX(Price)         as High,
+           Min(Price)         as Low,
+           cast(Time as DATE) as DateTime
+
+    from (select PD.StockId,
+                 PD.Price,
+                 PD.Time,
+                 First_Value(Price) over (partition by StockId, cast(Time as DAte) order by Time)       as Opened,
+                 First_Value(Price) over (partition by StockId, cast(Time as DAte) order by Time desc)  as Closed,
+                 First_Value(Volume) over (partition by StockId, cast(Time as DAte) order by Time desc) as Volume
+
+          from PriceDaily as PD
+
+          where cast(Time as DAte) > (select cast(Max(DateTime) as DATE)
+                                      from PriceHistory as PH
+                                      where StockId = PD.StockId) 
+        and cast(Time as Date) <= @Time
+         ) as PriceDaily
+
+    group by StockId, cast(Time as DATE)
+    order by cast(Time as DATE)
+end
+
+go

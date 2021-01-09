@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
-using System.Linq;
+using System.Reflection;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using Dapper;
 using FinanceMonitor.Api.Filters;
 using FinanceMonitor.Api.Jobs;
@@ -14,24 +13,16 @@ using FinanceMonitor.DAL.Repositories;
 using FinanceMonitor.DAL.Repositories.Interfaces;
 using FinanceMonitor.DAL.Services;
 using FinanceMonitor.DAL.Services.Interfaces;
-using FinanceMonitor.Messages;
 using IdentityServer4.AccessTokenValidation;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Quartz;
 using Rebus.Config;
-using Rebus.Handlers;
-using Rebus.Routing.TypeBased;
 using Rebus.ServiceProvider;
-using Message = Rebus.Messages.Message;
 
 namespace FinanceMonitor.Api
 {
@@ -57,8 +48,8 @@ namespace FinanceMonitor.Api
             services.Configure<MigrationOptions>(x =>
             {
                 x.ConnectionString = Configuration.GetConnectionString("DefaultConnection");
-                x.FilePath = Path.Combine(System.IO.Path.GetDirectoryName(
-                        System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase), "migration.sql")
+                x.FilePath = Path.Combine(Path.GetDirectoryName(
+                        Assembly.GetExecutingAssembly().GetName().CodeBase), "migration.sql")
                     .Substring(6);
             });
 
@@ -67,13 +58,74 @@ namespace FinanceMonitor.Api
             services.AddScoped<IUserStockService, UserStockService>();
             services.AddSingleton<MigrationService>();
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IManagementRepository, ManagementRepository>();
 
 
             services.AddControllers()
-                .AddJsonOptions(opts =>
+                .AddJsonOptions(opts => { opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
+
+            ConfigureSwagger(services);
+
+            ConfigureQuartz(services);
+
+            SqlMapper.AddTypeMap(typeof(DateTime), DbType.DateTime2);
+
+            services.AddCors();
+
+            services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
+                .AddIdentityServerAuthentication(options =>
                 {
-                    opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                    // base-address of your identityserver
+                    options.Authority = "https://localhost:5002";
+
+                    options.ApiName = "api";
                 });
+
+            services.AutoRegisterHandlersFromAssemblyOf<UserCreatedHandler>();
+            services.AddRebus(configure =>
+            {
+                configure.Transport(t =>
+                    t.UseRabbitMq(rebusConfig.RabbitMQConnection, "api").ClientConnectionName("api"));
+                return configure;
+            });
+        }
+
+        private static void ConfigureQuartz(IServiceCollection services)
+        {
+            services.AddQuartz(x =>
+            {
+                x.UseMicrosoftDependencyInjectionScopedJobFactory(c => { c.AllowDefaultConstructor = true; });
+            });
+
+            services.AddQuartz(q =>
+            {
+                q.ScheduleJob<PullHistoryJob>(trigger =>
+                {
+                    trigger.WithIdentity("PullHistoryJob")
+                        .StartAt(DateTimeOffset.UtcNow.AddSeconds(7))
+                        .WithCronSchedule("0 * * ? * * *");
+                });
+
+                q.ScheduleJob<PullDailyInfoJob>(trigger =>
+                {
+                    trigger.WithIdentity("PullDailyInfoJob")
+                        .StartAt(DateTimeOffset.UtcNow.AddSeconds(5))
+                        .WithCronSchedule("0 * * ? * * *");
+                });
+
+                q.ScheduleJob<ProcessDailyDataJob>(trigger =>
+                {
+                    trigger.WithIdentity("ProcessDailyDataJob")
+                        .StartAt(DateTimeOffset.UtcNow.AddSeconds(30))
+                        .WithCronSchedule("0 0 * ? * * *");
+                });
+            });
+
+            services.AddQuartzServer(options => { options.WaitForJobsToComplete = true; });
+        }
+
+        private static void ConfigureSwagger(IServiceCollection services)
+        {
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo {Title = "FinanceMonitor.Api", Version = "v1"});
@@ -104,53 +156,6 @@ namespace FinanceMonitor.Api
                     Scheme = "Bearer"
                 });
                 c.OperationFilter<AuthorizeCheckOperationFilter>();
-                
-            });
-            
-            
-
-            services.AddQuartz(x =>
-            {
-                x.UseMicrosoftDependencyInjectionScopedJobFactory(c => { c.AllowDefaultConstructor = true; });
-            });
-
-            services.AddQuartz(q =>
-            {
-                q.ScheduleJob<PullHistoryJob>(trigger =>
-                {
-                    trigger.WithIdentity("PullHistoryJob")
-                        .StartAt(DateTimeOffset.UtcNow.AddSeconds(7))
-                        .WithCronSchedule("0 * * ? * * *");
-                });
-
-                q.ScheduleJob<PullDailyInfoJob>(trigger =>
-                {
-                    trigger.WithIdentity("PullDailyInfoJob")
-                        .StartAt(DateTimeOffset.UtcNow.AddSeconds(5))
-                        .WithCronSchedule("0 * * ? * * *");
-                });
-            });
-
-            services.AddQuartzServer(options => { options.WaitForJobsToComplete = true; });
-
-            SqlMapper.AddTypeMap(typeof(DateTime), DbType.DateTime2);
-
-            services.AddCors();
-
-            services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
-                .AddIdentityServerAuthentication(options =>
-                {
-                    // base-address of your identityserver
-                    options.Authority = "https://localhost:5002";
-
-                    options.ApiName = "api";
-                });
-
-            services.AutoRegisterHandlersFromAssemblyOf<UserCreatedHandler>();
-            services.AddRebus(configure =>
-            {
-                configure.Transport(t => t.UseRabbitMq(rebusConfig.RabbitMQConnection, "api").ClientConnectionName("api"));
-                return configure;
             });
         }
 
@@ -170,11 +175,8 @@ namespace FinanceMonitor.Api
                     c.OAuthUsePkce();
                 });
             }
-            
-            app.ApplicationServices.UseRebus(async bus =>
-            {
-                await bus.Subscribe<UserCreatedHandler>();
-            });
+
+            app.ApplicationServices.UseRebus(async bus => { await bus.Subscribe<UserCreatedHandler>(); });
 
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
