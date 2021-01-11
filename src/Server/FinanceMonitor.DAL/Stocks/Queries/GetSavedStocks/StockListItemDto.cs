@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FinanceMonitor.DAL.Models
+namespace FinanceMonitor.DAL.Stocks.Queries.GetSavedStocks
 {
     public class StockListItemDto
     {

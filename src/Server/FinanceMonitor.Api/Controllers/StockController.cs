@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using FinanceMonitor.DAL.Enums;
 using FinanceMonitor.DAL.Models;
-using FinanceMonitor.DAL.Repositories.Interfaces;
+using FinanceMonitor.DAL.Stocks.Queries.GetSavedStocks;
+using FinanceMonitor.DAL.Stocks.Queries.GetStockDaily;
+using FinanceMonitor.DAL.Stocks.Queries.GetStockDetails;
+using FinanceMonitor.DAL.Stocks.Queries.GetStockHistory;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FinanceMonitor.Api.Controllers
@@ -12,43 +16,36 @@ namespace FinanceMonitor.Api.Controllers
     [Route("[controller]")]
     public class StockController : ControllerBase
     {
-        private readonly IStockRepository _repository;
+        private readonly IMediator _mediator;
 
-        public StockController(IStockRepository repository)
+        public StockController(IMediator mediator)
         {
-            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         }
 
         [HttpGet("list")]
-        public async Task<ICollection<StockListItemDto>> GetStocks()
+        public Task<ICollection<StockListItemDto>> GetStocks()
         {
-            var stocks = await _repository.GetSavedStocks();
-            return stocks;
+            return _mediator.Send(new GetSavedStocksQuery());
         }
 
         [HttpGet("{symbol}")]
-        public async Task<Stock> GetStockDetails(string symbol)
+        public Task<Stock> GetStockDetails(string symbol)
         {
-            var stock = await _repository.GetStock(symbol);
-            return stock;
+            return _mediator.Send(new GetStockDetailsQuery(symbol));
         }
 
         [HttpGet("{symbol}/history")]
-        public async Task<ICollection<PriceHistory>> GetStockHistory(string symbol, HistoryType type,
+        public Task<ICollection<PriceHistory>> GetStockHistory(string symbol, HistoryType type,
             DateTime start = default, DateTime end = default)
         {
-            var history = await _repository.GetStockHistory(symbol, type,
-                start, end);
-
-            return history;
+            return _mediator.Send(new GetStockHistoryQuery(symbol, type, start, end));
         }
 
         [HttpGet("{symbol}/daily")]
-        public async Task<ICollection<PriceDaily>> GetStockDaily(string symbol)
+        public Task<ICollection<PriceDaily>> GetStockDaily(string symbol, DateTime? date)
         {
-            var daily = await _repository.GetStockDaily(symbol, DateTime.UtcNow);
-
-            return daily;
+            return _mediator.Send(new GetStockDailyQuery(symbol, date ?? DateTime.UtcNow));
         }
     }
 }

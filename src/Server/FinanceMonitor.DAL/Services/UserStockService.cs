@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using FinanceMonitor.DAL.Dto;
 using FinanceMonitor.DAL.Exceptions;
@@ -13,13 +11,16 @@ namespace FinanceMonitor.DAL.Services
     public class UserStockService : IUserStockService
     {
         private readonly IYahooApiService _apiService;
-        private readonly IStockRepository _repository;
+        private readonly IStockRepository _stockRepository;
+        private readonly IUserRepository _userRepository;
 
         public UserStockService(IStockRepository repository,
-            IYahooApiService apiService)
+            IYahooApiService apiService,
+            IUserRepository userRepository)
         {
-            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _stockRepository = repository ?? throw new ArgumentNullException(nameof(repository));
             _apiService = apiService ?? throw new ArgumentNullException(nameof(apiService));
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         }
 
         public async Task<UserPrice> AddUserPrice(AddUserPriceDto price)
@@ -27,9 +28,9 @@ namespace FinanceMonitor.DAL.Services
             var apiResult = await _apiService.GetStock(price.Symbol);
             if (apiResult == null) throw new NotFoundException("Symbol is not found");
 
-            var existingStock = await _repository.GetStock(price.Symbol);
+            var existingStock = await _stockRepository.GetStock(price.Symbol);
             if (existingStock == null)
-                existingStock = await _repository.CreateStock(new Stock
+                existingStock = await _stockRepository.CreateStock(new Stock
                 {
                     Symbol = price.Symbol,
                     Market = apiResult.Market,
@@ -43,7 +44,7 @@ namespace FinanceMonitor.DAL.Services
                     QuoteType = apiResult.QuoteType
                 });
 
-            var addedPricing = await _repository.AddUserPrice(new UserPrice
+            var addedPricing = await _userRepository.AddUserPrice(new UserPrice
             {
                 StockId = existingStock.Id,
                 UserId = price.UserId,
@@ -53,16 +54,6 @@ namespace FinanceMonitor.DAL.Services
             });
 
             return addedPricing;
-        }
-
-        public async Task<IReadOnlyCollection<UserPrice>> GetUserStockPrices(string userId, string symbol)
-        {
-            return (await _repository.GetUserStockPrices(userId, symbol)).ToArray();
-        }
-
-        public async Task<IReadOnlyCollection<UserStock>> GetUserStocks(string userId)
-        {
-            return (await _repository.GetUserStocks(userId)).ToArray();
         }
     }
 }

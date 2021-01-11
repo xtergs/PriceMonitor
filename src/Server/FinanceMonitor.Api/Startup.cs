@@ -9,11 +9,13 @@ using FinanceMonitor.Api.Filters;
 using FinanceMonitor.Api.Jobs;
 using FinanceMonitor.Api.MessageHandlers;
 using FinanceMonitor.Api.Models;
+using FinanceMonitor.DAL.Models;
 using FinanceMonitor.DAL.Repositories;
 using FinanceMonitor.DAL.Repositories.Interfaces;
 using FinanceMonitor.DAL.Services;
 using FinanceMonitor.DAL.Services.Interfaces;
 using IdentityServer4.AccessTokenValidation;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -60,6 +62,7 @@ namespace FinanceMonitor.Api
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IManagementRepository, ManagementRepository>();
 
+            services.AddMediatR(typeof(Stock).GetTypeInfo().Assembly);
 
             services.AddControllers()
                 .AddJsonOptions(opts => { opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });

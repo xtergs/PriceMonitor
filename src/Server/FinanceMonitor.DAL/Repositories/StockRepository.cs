@@ -7,6 +7,7 @@ using FinanceMonitor.DAL.Dto;
 using FinanceMonitor.DAL.Enums;
 using FinanceMonitor.DAL.Models;
 using FinanceMonitor.DAL.Repositories.Interfaces;
+using FinanceMonitor.DAL.Stocks.Queries.GetSavedStocks;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 
@@ -45,41 +46,6 @@ namespace FinanceMonitor.DAL.Repositories
             return inserted;
         }
 
-        public async Task<UserPrice> AddUserPrice(UserPrice price)
-        {
-            await using var db = GetConnection();
-
-            var inserted = await db.QueryFirstAsync<UserPrice>(
-                @"exec dbo.AddUserPrice @UserId, @StockId, @Price, @Count, @DateTime", price);
-
-            return inserted;
-        }
-
-        public async Task<ICollection<UserPrice>> GetUserStockPrices(string userId, string symbol)
-        {
-            await using var db = GetConnection();
-
-            var collection = await db.QueryAsync<UserPrice>(@"exec dbo.GetUserStockPrices  @UserId, @Symbol", new
-            {
-                UserId = userId,
-                Symbol = symbol
-            });
-
-            return collection.ToArray();
-        }
-
-        public async Task<ICollection<UserStock>> GetUserStocks(string userId)
-        {
-            await using var db = GetConnection();
-
-            var collection = await db.QueryAsync<UserStock>(
-                @"exec dbo.GetUserStocks @UserId", new
-                {
-                    UserId = userId
-                });
-
-            return collection.ToArray();
-        }
 
         public async Task<ICollection<Stock>> GetStocksWithoutHistory()
         {

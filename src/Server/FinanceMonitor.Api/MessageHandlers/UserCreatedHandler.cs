@@ -1,26 +1,23 @@
 ﻿using System.Threading.Tasks;
-using FinanceMonitor.DAL.Models;
-using FinanceMonitor.DAL.Repositories;
+using FinanceMonitor.DAL.UserProfile.Commands.AddUserProfile;
 using FinanceMonitor.Messages;
+using MediatR;
 using Rebus.Handlers;
 
 namespace FinanceMonitor.Api.MessageHandlers
 {
     public class UserCreatedHandler : IHandleMessages<UserCreated>
     {
-        private readonly IUserRepository _repository;
+        private readonly IMediator _mediator;
 
-        public UserCreatedHandler(IUserRepository repository)
+        public UserCreatedHandler(IMediator mediator)
         {
-            _repository = repository;
+            _mediator = mediator;
         }
 
-        public async Task Handle(UserCreated message)
+        public Task Handle(UserCreated message)
         {
-            await _repository.AddUser(new UserProfile
-            {
-                Id = message.UserId
-            });
+            return _mediator.Send(new AddUserProfileCommand(message.UserId));
         }
     }
 }

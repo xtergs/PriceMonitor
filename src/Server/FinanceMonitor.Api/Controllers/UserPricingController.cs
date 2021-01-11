@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FinanceMonitor.Api.Extensions;
-using FinanceMonitor.DAL.Dto;
 using FinanceMonitor.DAL.Models;
 using FinanceMonitor.DAL.Services.Interfaces;
+using FinanceMonitor.DAL.UserProfile.Commands.AddUserShare;
+using FinanceMonitor.DAL.UserProfile.Queries.GetUserStocks;
+using FinanceMonitor.DAL.UserProfile.Queries.GetUserStockShares;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,33 +18,31 @@ namespace FinanceMonitor.Api.Controllers
     [Route("[controller]")]
     public class UserPricingController : ControllerBase
     {
-        private readonly IUserStockService _stockService;
+        private readonly IMediator _mediator;
 
-        public UserPricingController(IUserStockService stockService)
+        public UserPricingController(IUserStockService stockService, IMediator mediator)
         {
-            _stockService = stockService ?? throw new ArgumentNullException(nameof(stockService));
+            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         }
 
         [HttpPost]
-        public async Task<UserPrice> Add(AddUserPriceDto price)
+        public Task<UserPrice> Add(AddUserShareCommand command)
         {
-            var userId = this.UserId();
-            price.UserId = userId;
-            return await _stockService.AddUserPrice(price);
+            command.UserId = this.UserId();
+            return _mediator.Send(command);
         }
 
         [HttpGet("list")]
-        public async Task<IReadOnlyCollection<UserStock>> GetStocks()
+        public Task<ICollection<UserStock>> GetStocks()
         {
-            var userId = this.UserId();
-            return await _stockService.GetUserStocks(userId);
+            return _mediator.Send(new GetUserStocksQuery(this.UserId()));
         }
 
         [HttpGet("{symbol}/shares")]
-        public async Task<IReadOnlyCollection<UserPrice>> GetPrices(string symbol)
+        public Task<ICollection<UserPrice>> GetPrices(string symbol)
         {
             var userId = this.UserId();
-            return await _stockService.GetUserStockPrices(userId, symbol);
+            return _mediator.Send(new GetUserStockSharesQuery(symbol, userId));
         }
     }
 }
