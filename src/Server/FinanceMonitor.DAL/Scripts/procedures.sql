@@ -23,8 +23,7 @@ as
 begin
     select PD.*
     from PriceDaily as PD
-             join Stock S on PD.StockId = S.Id
-    where Symbol = @Symbol
+    where PD.StockSymbol = @Symbol
       and PD.Time between @Start and @End
     order by Time
 end
@@ -35,11 +34,11 @@ go
 create procedure GetUserStocks @UserId nvarchar(512)
 as
 begin
-    select s.Id, s.Symbol, s.ShortName, s.LongName, SUM(UP.Count) as Shares, Sum(UP.Price * UP.Count) as Total
+    select s.Symbol, s.ShortName, s.LongName, SUM(UP.Count) as Shares, Sum(UP.Price * UP.Count) as Total
     from Stock as s
-             inner join UserPrice UP on s.Id = UP.StockId
+             inner join UserPrice UP on s.Symbol = UP.StockSymbol
     where UP.UserId = @UserId
-    group by s.Id, s.Symbol, s.ShortName, s.LongName
+    group by s.Symbol, s.ShortName, s.LongName
 end
 
 
@@ -52,9 +51,8 @@ as
 begin
     select UP.*
     from UserPrice as UP
-             join Stock S on UP.StockId = S.Id
     where UserId = @UserId
-      and Symbol = @Symbol
+      and StockSymbol = @Symbol
 end
 
 go
@@ -94,21 +92,21 @@ go
 drop procedure if exists AddUserPrice
 go
 create procedure AddUserPrice @UserId nvarchar(512),
-                              @StockId uniqueidentifier,
+                              @StockSymbol nvarchar(512),
                               @Price money,
                               @Count int,
                               @DateTime datetime2
 as
 begin
-    Insert into UserPrice(UserId, StockId, Price, Count, DateTime)
+    Insert into UserPrice(UserId, StockSymbol, Price, Count, DateTime)
     OUTPUT Inserted.*
-    values (@UserId, @StockId, @Price, @Count, @DateTime)
+    values (@UserId, @StockSymbol, @Price, @Count, @DateTime)
 end
 
 go
 drop procedure if exists AddDailyPrice
 go
-create procedure AddDailyPrice @StockId uniqueidentifier,
+create procedure AddDailyPrice @StockSymbol nvarchar(512),
                                @Ask float,
                                @Bid float,
                                @AskSize float,
@@ -118,15 +116,15 @@ create procedure AddDailyPrice @StockId uniqueidentifier,
                                @Volume float
 as
 begin
-    Insert into PriceDaily (StockId, Ask, Bid, AskSize, BidSize, Time,
+    Insert into PriceDaily (StockSymbol, Ask, Bid, AskSize, BidSize, Time,
                             Price, Volume)
-    values (@StockId, @Ask, @Bid, @AskSize, @BidSize, @Time, @Price, @Volume)
+    values (@StockSymbol, @Ask, @Bid, @AskSize, @BidSize, @Time, @Price, @Volume)
 end
 
 go
 drop procedure if exists InsertHistory
 go
-create procedure InsertHistory @StockId uniqueidentifier,
+create procedure InsertHistory @StockSymbol nvarchar(512),
                                @Volume float,
                                @Opened float,
                                @Closed float,
@@ -135,8 +133,8 @@ create procedure InsertHistory @StockId uniqueidentifier,
                                @DateTime datetime2
 as
 begin
-    Insert into PriceHistory (StockId, Volume, Opened, Closed, High, Low, DateTime)
-    values (@StockId, @Volume, @Opened, @Closed, @High, @Low, @DateTime)
+    Insert into PriceHistory (StockSymbol, Volume, Opened, Closed, High, Low, DateTime)
+    values (@StockSymbol, @Volume, @Opened, @Closed, @High, @Low, @DateTime)
 end
 
 go
@@ -148,13 +146,13 @@ begin
     select S.*, PD.*
     from Stock as S
 
-             join (select row_number() over (partition by PD.StockId order by Time Desc) r,
-                          PD.StockId,
-                          PD.Price  as                                             CurrentPrice,
-                          PD.Time   as                                             CurrentTime,
-                          PD.Volume as                                             CurrentVolume
+             join (select row_number() over (partition by PD.StockSymbol order by Time Desc) r,
+                          PD.StockSymbol,
+                          PD.Price  as                                                       CurrentPrice,
+                          PD.Time   as                                                       CurrentTime,
+                          PD.Volume as                                                       CurrentVolume
                    from PriceDaily as PD
-    ) as PD on S.Id = PD.StockId and PD.r = 1
+    ) as PD on S.Symbol = PD.StockSymbol and PD.r = 1
 
 end
 go
@@ -166,10 +164,9 @@ create procedure GetStockHistoryYearly @Symbol nvarchar(512),
 as
 begin
     select *
-    from (select ROW_NUMBER() over (partition by StockId, Year(DateTime) order by DateTime desc) as r, PH.*
+    from (select ROW_NUMBER() over (partition by StockSymbol, Year(DateTime) order by DateTime desc) as r, PH.*
           from PriceHistory as PH
-                   join Stock on PH.StockId = Stock.Id
-          where Stock.Symbol = @Symbol
+          where PH.StockSymbol = @Symbol
          ) as PH
     where PH.r = 1
       and DateTime between @End and @Start
@@ -187,8 +184,7 @@ begin
     select *
     from (select ROW_NUMBER() over (partition by Year(DateTime), Month(DateTime) order by DateTime desc) as r, PH.*
           from PriceHistory as PH
-                   join Stock on PH.StockId = Stock.Id
-          where Stock.Symbol = @Symbol
+          where PH.StockSymbol = @Symbol
          ) as PH
     where PH.r = 1
       and DateTime between @End and @Start
@@ -203,11 +199,27 @@ create procedure GetStockHistoryDaily @Symbol nvarchar(512),
                                       @End datetime2
 as
 begin
-    select PH.*
-    from PriceHistory as PH
-             join Stock on PH.StockId = Stock.Id
-    where Stock.Symbol = @Symbol
-      and DateTime between @End and @Start
+    with dailyHistory as (
+        select PH.*,
+               NTILE(45) OVER (order by DateTime asc) AS Quartile
+        from PriceHistory as PH
+        where PH.StockSymbol = @Symbol
+          and DateTime between @End and @Start
+    )
+
+
+    select *
+    from (
+             select *, first_value(RowNumber) over (partition by Quartile order by RowNumber desc) as LastRow
+             from (
+                      select *, Row_Number() over (partition by Quartile order by Quartile asc) as RowNumber
+                      from dailyHistory
+                  ) as t
+         ) as t1
+    where (t1.RowNumber = 1 and Quartile = 1)
+       or t1.RowNumber = CEILING(t1.LastRow / 2)
+       or (t1.RowNumber = t1.LastRow)
+
     order by DateTime asc
 end
 
@@ -233,12 +245,11 @@ go
 drop procedure if exists ProcessDailyDataIntoHistory
 go
 
-create procedure ProcessDailyDataIntoHistory
-            @Time date
+create procedure ProcessDailyDataIntoHistory @Time date
 as
 begin
-    insert into PriceHistory (StockId, Volume, Opened, Closed, High, Low, DateTime)
-    select StockID,
+    insert into PriceHistory (StockSymbol, Volume, Opened, Closed, High, Low, DateTime)
+    select StockSymbol,
            Max(Volume)        as Volume,
            Max(Opened)        as Opened,
            Max(Closed)        as Closed,
@@ -246,23 +257,43 @@ begin
            Min(Price)         as Low,
            cast(Time as DATE) as DateTime
 
-    from (select PD.StockId,
+    from (select PD.StockSymbol,
                  PD.Price,
                  PD.Time,
-                 First_Value(Price) over (partition by StockId, cast(Time as DAte) order by Time)       as Opened,
-                 First_Value(Price) over (partition by StockId, cast(Time as DAte) order by Time desc)  as Closed,
-                 First_Value(Volume) over (partition by StockId, cast(Time as DAte) order by Time desc) as Volume
+                 First_Value(Price) over (partition by StockSymbol, cast(Time as DAte) order by Time)       as Opened,
+                 First_Value(Price) over (partition by StockSymbol, cast(Time as DAte) order by Time desc)  as Closed,
+                 First_Value(Volume) over (partition by StockSymbol, cast(Time as DAte) order by Time desc) as Volume
 
           from PriceDaily as PD
 
-          where cast(Time as DAte) > (select cast(Max(DateTime) as DATE)
+          where cast(Time as DAte) > (select Max(DateTime)
                                       from PriceHistory as PH
-                                      where StockId = PD.StockId) 
-        and cast(Time as Date) <= @Time
+                                      where PH.StockSymbol = PD.StockSymbol)
+            and cast(Time as Date) <= @Time
          ) as PriceDaily
 
-    group by StockId, cast(Time as DATE)
+    group by StockSymbol, cast(Time as DATE)
     order by cast(Time as DATE)
 end
 
+go
+
+drop procedure if exists GetStocksWithoutHistory
+go
+create procedure GetStocksWithoutHistory
+as
+begin
+    select S.*
+    from Stock as S
+             left join PriceHistory PH on S.Symbol = PH.StockSymbol
+    where PH.StockSymbol is null
+end
+go
+drop procedure if exists GetStocks
+go
+create procedure GetStocks
+as
+begin
+    select S.Symbol from Stock as S
+end
 go

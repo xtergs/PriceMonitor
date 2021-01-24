@@ -43,7 +43,7 @@ namespace FinanceMonitor.Api.Jobs
                     Bid = apiInfo.Bid,
                     AskSize = apiInfo.AskSize,
                     BidSize = apiInfo.BidSize,
-                    StockId = stock.Id,
+                    StockSymbol = stock.Symbol,
                     Time = apiInfo.Time,
                     Price = apiInfo.Price,
                     Volume = apiInfo.Volume

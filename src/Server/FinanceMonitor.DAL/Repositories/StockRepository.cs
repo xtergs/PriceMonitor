@@ -51,9 +51,7 @@ namespace FinanceMonitor.DAL.Repositories
         {
             var db = GetConnection();
 
-            var stocks = await db.QueryAsync<Stock>(@"select S.* from Stock as S
-left join PriceHistory PH on S.Id = PH.StockId
-where PH.Id is null");
+            var stocks = await db.QueryAsync<Stock>(@"exec dbo.GetStocksWithoutHistory");
 
             return stocks.ToArray();
         }
@@ -63,7 +61,7 @@ where PH.Id is null");
             var db = GetConnection();
 
             var result = await db.ExecuteAsync(@"exec dbo.InsertHistory
- @StockId, @Volume, @Opened, @Closed, @High, @Low, @DateTime",
+ @StockSymbol, @Volume, @Opened, @Closed, @High, @Low, @DateTime",
                 history);
 
             var inserted = result;
@@ -75,7 +73,7 @@ where PH.Id is null");
 
             var result = await db.ExecuteAsync(
                 @"exec dbo.AddDailyPrice
- @StockId, @Ask, @Bid, @AskSize, @BidSize, @Time, @Price, @Volume", price);
+ @StockSymbol, @Ask, @Bid, @AskSize, @BidSize, @Time, @Price, @Volume", price);
         }
 
         public async Task<ICollection<ShortStockInfo>> GetStocks()
@@ -83,7 +81,7 @@ where PH.Id is null");
             var db = GetConnection();
 
             var result = await db.QueryAsync<ShortStockInfo>(
-                @"select S.Id, S.Symbol from Stock as S");
+                @"exec dbo.GetStocks");
 
             return result.ToArray();
         }

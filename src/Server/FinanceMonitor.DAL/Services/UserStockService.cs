@@ -46,7 +46,7 @@ namespace FinanceMonitor.DAL.Services
 
             var addedPricing = await _userRepository.AddUserPrice(new UserPrice
             {
-                StockId = existingStock.Id,
+                StockSymbol = existingStock.Symbol,
                 UserId = price.UserId,
                 Price = price.Price,
                 Count = price.Count,

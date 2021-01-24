@@ -22,6 +22,9 @@
       <Content Include="Scripts\procedures.sql">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
+      <Content Include="Scripts\schema_update_1.sql">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
       <Content Include="Scripts\tables.sql">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>

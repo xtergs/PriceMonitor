@@ -55,7 +55,7 @@ namespace FinanceMonitor.DAL.Repositories
             await using var db = GetConnection();
 
             var inserted = await db.QueryFirstAsync<UserPrice>(
-                @"exec dbo.AddUserPrice @UserId, @StockId, @Price, @Count, @DateTime", price);
+                @"exec dbo.AddUserPrice @UserId, @StockSymbol, @Price, @Count, @DateTime", price);
 
             return inserted;
         }

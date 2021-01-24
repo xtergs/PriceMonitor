@@ -4,8 +4,7 @@ namespace FinanceMonitor.DAL.Models
 {
     public class PriceHistory
     {
-        public Guid Id { get; set; }
-        public Guid StockId { get; set; }
+        public string StockSymbol { get; set; }
         public double Volume { get; set; }
         public double Opened { get; set; }
         public double Closed { get; set; }

@@ -4,7 +4,6 @@ namespace FinanceMonitor.DAL.Models
 {
     public class Stock
     {
-        public Guid Id { get; set; }
         public string Symbol { get; set; }
         public string Market { get; set; }
         public string Timezone { get; set; }

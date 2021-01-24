@@ -43,7 +43,7 @@ namespace FinanceMonitor.Api.Jobs
                     High = x.High,
                     Low = x.Low,
                     DateTime = x.DateTime,
-                    StockId = stock.Id
+                    StockSymbol = stock.Symbol
                 }).ToArray();
 
                 await _repository.InsertHistory(mapped);
