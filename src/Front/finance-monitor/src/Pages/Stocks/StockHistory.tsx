@@ -65,9 +65,6 @@ export const StockHistory = (props: IProps) => {
 
     }, [startDate, endDate, type])
 
-    const handleMapClick = (data: any) => {
-
-    }
 
     const zoom = () => {
         if (leftArea === rightArea || !rightArea || !leftArea) {
@@ -110,10 +107,8 @@ export const StockHistory = (props: IProps) => {
                         height={400}
                         data={history}
                         margin={{top: 5, right: 20, left: 10, bottom: 5}}
-                        // onClick={(e: any, d: any) => {
-                        //     console.log(e);
-                        //     console.log(d)
-                        // }}
+                        syncId={"1"}
+
                         onMouseDown={(e: any) => {
                             if (!e) {
                                 return;
@@ -136,6 +131,44 @@ export const StockHistory = (props: IProps) => {
                         <CartesianGrid stroke="#f5f5f5"/>
                         <Line type="monotone" dataKey="high" stroke="#ff7300" yAxisId={0}/>
                         <Line type="monotone" dataKey="low" stroke="#387908" yAxisId={0}/>
+                        {
+                            (!!leftArea && !!rightArea) ? (
+                                <ReferenceArea yAxisId="0" x1={new Date(leftArea).toString()}
+                                               x2={new Date(rightArea).toString()} stroke="#8884d8"
+                                               strokeOpacity={0.3}/>) : null
+
+                        }
+                        <Legend/>
+                    </LineChart>
+
+                    <LineChart
+                        width={1000}
+                        height={400}
+                        data={history}
+                        margin={{top: 5, right: 20, left: 10, bottom: 5}}
+                        syncId={"1"}
+                        // onMouseDown={(e: any) => {
+                        //     if (!e) {
+                        //         return;
+                        //     }
+                        //     setLeftArea(e.activeLabel)
+                        // }}
+                        // onMouseMove={(e: any) => {
+                        //     if (!e)
+                        //         return;
+                        //     leftArea && setRightArea(e.activeLabel)
+                        // }}
+                        // onMouseUp={zoom}
+                    >
+                        <XAxis dataKey="dateTime" domain={['dataMin', 'dataMax']} tickFormatter={formatXAxis}/>
+                        <YAxis type="number" domain={['dataMin', 'dataMax']} yAxisId={0}/>
+                        <Tooltip
+                            labelFormatter={(label, payload) => {
+                                return moment(label).local(false).format("L")
+                            }}/>
+                        <CartesianGrid stroke="#f5f5f5"/>
+                        <Line type="monotone" dataKey="opened" stroke="#ff7300" yAxisId={0}/>
+                        <Line type="monotone" dataKey="closed" stroke="#387908" yAxisId={0}/>
                         {
                             (!!leftArea && !!rightArea) ? (
                                 <ReferenceArea yAxisId="0" x1={new Date(leftArea).toString()}
