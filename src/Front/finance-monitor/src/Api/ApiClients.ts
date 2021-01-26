@@ -125,48 +125,37 @@ export class ApiClient extends AuthorizedApiBase {
     /**
      * @return Success
      */
-    testAuth(signal?: AbortSignal | undefined): Promise<boolean> {
-        let url_ = this.baseUrl + "/Api/TestAuth";
+    processDailyData(signal?: AbortSignal | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/Api/ProcessDailyData";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ = <RequestInit>{
             method: "GET",
             signal,
             headers: {
-                "Accept": "text/plain"
             }
         };
 
         return this.transformOptions(options_).then(transformedOptions_ => {
             return this.http.fetch(url_, transformedOptions_);
         }).then((_response: Response) => {
-            return this.processTestAuth(_response);
+            return this.processProcessDailyData(_response);
         });
     }
 
-    protected processTestAuth(response: Response): Promise<boolean> {
+    protected processProcessDailyData(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : <boolean>JSON.parse(_responseText, this.jsonParseReviver);
-            return result200;
-            });
-        } else if (status === 401) {
-            return response.text().then((_responseText) => {
-            return throwException("Unauthorized", status, _responseText, _headers);
-            });
-        } else if (status === 403) {
-            return response.text().then((_responseText) => {
-            return throwException("Forbidden", status, _responseText, _headers);
+            return;
             });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<boolean>(<any>null);
+        return Promise.resolve<void>(<any>null);
     }
 }
 
@@ -320,13 +309,16 @@ export class StockClient extends AuthorizedApiBase {
     }
 
     /**
+     * @param date (optional) 
      * @return Success
      */
-    daily(symbol: string | null, signal?: AbortSignal | undefined): Promise<PriceDaily[]> {
-        let url_ = this.baseUrl + "/Stock/{symbol}/daily";
+    daily(symbol: string | null, date: Date | null | undefined, signal?: AbortSignal | undefined): Promise<PriceDaily[]> {
+        let url_ = this.baseUrl + "/Stock/{symbol}/daily?";
         if (symbol === undefined || symbol === null)
             throw new Error("The parameter 'symbol' must be defined.");
         url_ = url_.replace("{symbol}", encodeURIComponent("" + symbol));
+        if (date !== undefined && date !== null)
+            url_ += "date=" + encodeURIComponent(date ? "" + date.toJSON() : "") + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ = <RequestInit>{
@@ -377,7 +369,7 @@ export class UserPricingClient extends AuthorizedApiBase {
      * @param body (optional) 
      * @return Success
      */
-    userPricing(body: AddUserPriceDto | undefined, signal?: AbortSignal | undefined): Promise<UserPrice> {
+    userPricing(body: AddUserShareCommand | undefined, signal?: AbortSignal | undefined): Promise<UserPrice> {
         let url_ = this.baseUrl + "/UserPricing";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -525,22 +517,20 @@ export class UserPricingClient extends AuthorizedApiBase {
 
 export interface StockListItemDto {
     symbol: string | null;
-    market: string | null;
-    timezone: string | null;
-    time: Date;
     longName: string | null;
     shortName: string | null;
-    language: string | null;
-    currency: string | null;
-    financialCurrency: string | null;
     quoteType: string | null;
     currentPrice: number;
     currentVolume: number;
     currentTime: Date;
+    status: string | null;
+    currency: string | null;
+    financialCurrency: string | null;
+    market: string | null;
+    timezone: string | null;
 }
 
 export interface Stock {
-    id: string;
     symbol: string | null;
     market: string | null;
     timezone: string | null;
@@ -560,8 +550,7 @@ export enum HistoryType {
 }
 
 export interface PriceHistory {
-    id: string;
-    stockId: string;
+    stockSymbol: string | null;
     volume: number;
     opened: number;
     closed: number;
@@ -571,8 +560,7 @@ export interface PriceHistory {
 }
 
 export interface PriceDaily {
-    id: string;
-    stockId: string;
+    stockSymbol: string | null;
     ask: number | null;
     bid: number | null;
     askSize: number;
@@ -582,7 +570,7 @@ export interface PriceDaily {
     time: Date;
 }
 
-export interface AddUserPriceDto {
+export interface AddUserShareCommand {
     userId: string | null;
     symbol: string | null;
     price: number;
@@ -591,21 +579,20 @@ export interface AddUserPriceDto {
 }
 
 export interface UserPrice {
-    id: string;
     userId: string | null;
-    stockId: string;
+    stockSymbol: string | null;
     price: number;
     count: number;
     dateTime: Date;
 }
 
 export interface UserStock {
-    id: string;
     symbol: string | null;
     shares: number;
+    total: number;
+    totalProfit: number;
     shortName: string | null;
     longName: string | null;
-    total: number;
 }
 
 export class ApiException extends Error {

@@ -131,5 +131,15 @@ namespace FinanceMonitor.DAL.Repositories
 
             return result.ToArray();
         }
+
+        public Task UpdateStockStatus(string symbol, string status)
+        {
+            var db = GetConnection();
+            return db.ExecuteAsync("exec dbo.UpdateStockStatus @Symbol, @Status", new
+            {
+                Symbol = symbol,
+                Status = status
+            });
+        }
     }
 }

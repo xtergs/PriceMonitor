@@ -56,10 +56,6 @@ export const StockDetails = (props: IProps) => {
                 <td>{stock.quoteType}</td>
             </tr>
 
-            <tr>
-                <td>ID</td>
-                <td>{stock.id}</td>
-            </tr>
         </table>
 
         <Link to={`${stock.symbol}/history`}>Show history</Link>

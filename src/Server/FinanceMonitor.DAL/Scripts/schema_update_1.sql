@@ -75,3 +75,8 @@ go
 
 alter table PriceHistory
 alter COLUMN DateTime Date
+
+go
+
+alter table Stock
+add Status nvarchar(50)

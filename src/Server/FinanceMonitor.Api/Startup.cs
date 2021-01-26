@@ -113,7 +113,7 @@ namespace FinanceMonitor.Api
                 {
                     trigger.WithIdentity("PullDailyInfoJob")
                         .StartAt(DateTimeOffset.UtcNow.AddSeconds(5))
-                        .WithCronSchedule("0 * * ? * * *");
+                        .WithCronSchedule("0/20 * * ? * * *");
                 });
 
                 q.ScheduleJob<ProcessDailyDataJob>(trigger =>

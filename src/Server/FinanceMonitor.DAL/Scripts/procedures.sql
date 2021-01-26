@@ -34,9 +34,29 @@ go
 create procedure GetUserStocks @UserId nvarchar(512)
 as
 begin
-    select s.Symbol, s.ShortName, s.LongName, SUM(UP.Count) as Shares, Sum(UP.Price * UP.Count) as Total
-    from Stock as s
-             inner join UserPrice UP on s.Symbol = UP.StockSymbol
+    with LastPrices
+             as (
+            select *,
+                   first_value(Price) OVER (partition by StockSymbol order by Time desc) as LastPrice,
+                   Row_number() over (partition by StockSymbol order by Time desc)       as rnumb
+            from PriceDaily
+        ),
+         LastPrice
+             as (
+             select *
+             from LastPrices
+             where rnumb = 1
+         )
+
+    select s.Symbol,
+           s.ShortName,
+           s.LongName,
+           SUM(UP.Count)                             as Shares,
+           Sum(UP.Price * UP.Count)                  as Total,
+           Sum(UP.Count * (PD.LastPrice - UP.Price)) as TotalProfit
+    from UserPrice as UP
+             left join LastPrice as PD on UP.StockSymbol = PD.StockSymbol
+             join Stock as s on s.Symbol = UP.StockSymbol
     where UP.UserId = @UserId
     group by s.Symbol, s.ShortName, s.LongName
 end
@@ -116,9 +136,14 @@ create procedure AddDailyPrice @StockSymbol nvarchar(512),
                                @Volume float
 as
 begin
+    if not exists (select * from PriceDaily where StockSymbol = @StockSymbol and
+                                              Time = @Time)
+       
+        begin 
     Insert into PriceDaily (StockSymbol, Ask, Bid, AskSize, BidSize, Time,
                             Price, Volume)
     values (@StockSymbol, @Ask, @Bid, @AskSize, @BidSize, @Time, @Price, @Volume)
+    end 
 end
 
 go
@@ -296,4 +321,16 @@ as
 begin
     select S.Symbol from Stock as S
 end
+go
+drop procedure if exists UpdateStockStatus
+go
+create procedure UpdateStockStatus 
+@Symbol nvarchar(512),
+@Status nvarchar(50)
+    as 
+    begin
+        update Stock
+        set Status = @Status
+        where Symbol = @Symbol
+    end
 go

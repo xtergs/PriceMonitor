@@ -19,5 +19,6 @@ namespace FinanceMonitor.DAL.Repositories.Interfaces
         Task<ICollection<StockListItemDto>> GetSavedStocks();
         Task<ICollection<PriceHistory>> GetStockHistory(string symbol, HistoryType type, DateTime start, DateTime end);
         Task<ICollection<PriceDaily>> GetStockDaily(string symbol, DateTime date);
+        Task UpdateStockStatus(string symbol, string status);
     }
 }

@@ -24,6 +24,17 @@ export const Stocks = (props: IProps) => {
             .finally(() => setLoading(false))
     }, [])
 
+    useEffect(()=>{
+        const interval = setInterval(async ()=> {
+            await new StockClient({},host).list()
+                .then(stocks => {
+                    setStocks(stocks);
+                })
+        }, 30*1000)
+
+        return ()=> clearInterval(interval)
+    }, [])
+
     const onRowClick = (item: Stock, index?: number) => {
         if (!item)
             return;
