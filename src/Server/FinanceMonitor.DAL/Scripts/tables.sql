@@ -96,25 +96,5 @@ create table UserProfile
 
 go
 
--- drop procedure if exists AddStock;
---     
--- create procedure AddStock
---     @Symbol nvarchar(512),
---     @Market nvarchar(512),
---     @Timezone nvarchar(512),
---     @Time datetime2,
---     @ShortName nvarchar(512),
---     @LongName nvarchar(512),
---     @Currency nvarchar(512),
---     @FinancialCurrency nvarchar(512),
---     @Language nvarchar(512),
---     @QuoteType nvarchar(512)
---     
--- as
--- begin
--- Insert into Stock (Symbol, Market, Timezone, Time, ShortName, LongName, Currency, FinancialCurrency, Language,
---                    QuoteType)
---     Output  Inserted.*
--- values (@Symbol, @Market, @Timezone, @Time, @ShortName, @LongName, @Currency, @FinancialCurrency, @Language,
---     @QuoteType)
--- end
+drop index if exists IX_DateTime_StockSymbol on PriceHistory
+create unique index IX_DateTime_StockSymbol on PriceHistory (StockSymbol, DateTime)
