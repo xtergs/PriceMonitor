@@ -178,6 +178,9 @@ begin
                           PD.Volume as                                                       CurrentVolume
                    from PriceDaily as PD
     ) as PD on S.Symbol = PD.StockSymbol and PD.r = 1
+    
+    select S.Symbol, history.*  from Stock as S
+                        cross apply GetStockHistoryDailyFunction (S.Symbol, default, default) as history
 
 end
 go
@@ -217,11 +220,44 @@ begin
 end
 
 go
+drop function if exists GetStockHistoryDailyFunction
+go
+create function GetStockHistoryDailyFunction (@Symbol nvarchar(512),
+                                      @Start datetime2 = '9999-01-01',
+                                      @End datetime2 = '0001-01-01'
+                                      )
+returns table
+as
+return
+        (
+            with dailyHistory as (
+                select PH.*,
+                       NTILE(45) OVER (order by DateTime asc) AS Quartile
+                from PriceHistory as PH
+                where PH.StockSymbol = @Symbol
+                  and DateTime between @End and @Start
+            )
+
+
+            select *
+            from (
+                     select *, first_value(RowNumber) over (partition by Quartile order by RowNumber desc) as LastRow
+                     from (
+                              select *, Row_Number() over (partition by Quartile order by Quartile asc) as RowNumber
+                              from dailyHistory
+                          ) as t
+                 ) as t1
+            where (t1.RowNumber = 1 and Quartile = 1)
+               or t1.RowNumber = CEILING(t1.LastRow / 2)
+               or (t1.RowNumber = t1.LastRow)
+
+        )
+go
 drop procedure if exists GetStockHistoryDaily
 go
 create procedure GetStockHistoryDaily @Symbol nvarchar(512),
-                                      @Start datetime2,
-                                      @End datetime2
+                                      @Start datetime2 = '0001-01-01',
+                                      @End datetime2 = '9999-01-01'
 as
 begin
     with dailyHistory as (

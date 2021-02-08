@@ -1,0 +1,43 @@
+version: '3.4'
+
+services:
+  sqldata: 
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    environment:
+      - SA_PASSWORD=Pass@word
+      - ACCEPT_EULA=Y
+    ports:
+      - "5433:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+  
+  identity:
+    build:
+      context: .
+      dockerfile: FinanceMonitor.Identity/Dockerfile
+    depends_on:
+      - sqldata
+      - rabbitmq
+    environment:
+      - Rebus__RabbitMQConnection=amqp://rabbitmq:5672
+      - ConnectionStrings__DefaultConnection=Server=sqldata;Database=PriceMonitor.Identity;Integrated Security=False;User Id=sa;Password=Pass@word;MultipleActiveResultSets=True
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+;https://+
+      - ASPNETCORE_HTTPS_PORT=5003
+      - ASPNETCORE_Kestrel__Certificates__Development__Password=crypticpassword
+    ports:
+      - 5002:80
+      - 5003:443
+    volumes:
+      - ${APPDATA}\microsoft\UserSecrets\:/root/.microsoft/usersecrets:ro  
+      - ${APPDATA}\.aspnet\https:/root/.aspnet/https:ro
+      
+volumes:
+  sqldata:
+      

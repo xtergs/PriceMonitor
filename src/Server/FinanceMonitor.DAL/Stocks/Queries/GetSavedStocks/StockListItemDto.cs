@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using FinanceMonitor.DAL.Models;
 
 namespace FinanceMonitor.DAL.Stocks.Queries.GetSavedStocks
 {
@@ -18,5 +20,6 @@ namespace FinanceMonitor.DAL.Stocks.Queries.GetSavedStocks
         public string Market { get; set; }
         public string Timezone { get; set; }
 
+        public IReadOnlyCollection<PriceHistory> FullHistory { get; set; }
     }
 }

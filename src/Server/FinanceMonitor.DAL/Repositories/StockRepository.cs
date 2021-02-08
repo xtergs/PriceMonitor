@@ -90,10 +90,20 @@ namespace FinanceMonitor.DAL.Repositories
         {
             var db = GetConnection();
 
-            var result = await db.QueryAsync<StockListItemDto>(
+            var result = await db.QueryMultipleAsync(
                 @"exec dbo.GetSavedStocks");
 
-            return result.ToArray();
+
+            var stocks = result.Read<StockListItemDto>();
+            var history = result.Read<PriceHistory>();
+
+            var grouped = stocks.GroupJoin(history, dto => dto.Symbol, priceHistory => priceHistory.StockSymbol, (dto, histories) =>
+            {
+                dto.FullHistory = histories.ToArray();
+                return dto;
+            });
+            
+            return grouped.ToArray();
         }
 
         public async Task<ICollection<PriceHistory>> GetStockHistory(string symbol,
