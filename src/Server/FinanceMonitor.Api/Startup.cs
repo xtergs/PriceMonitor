@@ -131,6 +131,13 @@ namespace FinanceMonitor.Api
                         .StartAt(DateTimeOffset.UtcNow.AddSeconds(30))
                         .WithCronSchedule("0 0 * ? * * *");
                 });
+                
+                q.ScheduleJob<CalculateFullHistoryGraphicJob>(trigger =>
+                {
+                    trigger.WithIdentity("CalculateFullHistoryGraphicJob")
+                        .StartAt(DateTimeOffset.UtcNow.AddSeconds(60))
+                        .WithCronSchedule("0 0 * ? * * *");
+                });
             });
 
             services.AddQuartzServer(options => { options.WaitForJobsToComplete = true; });

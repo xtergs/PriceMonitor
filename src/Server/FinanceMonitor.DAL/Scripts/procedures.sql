@@ -136,14 +136,15 @@ create procedure AddDailyPrice @StockSymbol nvarchar(512),
                                @Volume float
 as
 begin
-    if not exists (select * from PriceDaily where StockSymbol = @StockSymbol and
-                                              Time = @Time)
-       
-        begin 
-    Insert into PriceDaily (StockSymbol, Ask, Bid, AskSize, BidSize, Time,
-                            Price, Volume)
-    values (@StockSymbol, @Ask, @Bid, @AskSize, @BidSize, @Time, @Price, @Volume)
-    end 
+    if not exists(select *
+                  from PriceDaily
+                  where StockSymbol = @StockSymbol
+                    and Time = @Time)
+        begin
+            Insert into PriceDaily (StockSymbol, Ask, Bid, AskSize, BidSize, Time,
+                                    Price, Volume)
+            values (@StockSymbol, @Ask, @Bid, @AskSize, @BidSize, @Time, @Price, @Volume)
+        end
 end
 
 go
@@ -178,10 +179,10 @@ begin
                           PD.Volume as                                                       CurrentVolume
                    from PriceDaily as PD
     ) as PD on S.Symbol = PD.StockSymbol and PD.r = 1
-    
-    select S.Symbol, history.*  from Stock as S
-                        cross apply GetStockHistoryDailyFunction (S.Symbol, default, default) as history
 
+    select S.Symbol, history.*
+    from Stock as S
+             left join SampledHistoryDataYearly as history on S.Symbol = history.StockSymbol
 end
 go
 drop procedure if exists GetStockHistoryYearly
@@ -222,36 +223,36 @@ end
 go
 drop function if exists GetStockHistoryDailyFunction
 go
-create function GetStockHistoryDailyFunction (@Symbol nvarchar(512),
-                                      @Start datetime2 = '9999-01-01',
-                                      @End datetime2 = '0001-01-01'
-                                      )
-returns table
-as
-return
-        (
-            with dailyHistory as (
-                select PH.*,
-                       NTILE(45) OVER (order by DateTime asc) AS Quartile
-                from PriceHistory as PH
-                where PH.StockSymbol = @Symbol
-                  and DateTime between @End and @Start
+create function GetStockHistoryDailyFunction(@Symbol nvarchar(512),
+                                             @Start datetime2 = '9999-01-01',
+                                             @End datetime2 = '0001-01-01')
+    returns table
+        as
+        return
+            (
+                with dailyHistory as (
+                    select PH.*,
+                           NTILE(45) OVER (order by DateTime asc) AS Quartile
+                    from PriceHistory as PH
+                    where PH.StockSymbol = @Symbol
+                      and DateTime between @End and @Start
+                )
+
+
+                select *
+                from (
+                         select *,
+                                first_value(RowNumber) over (partition by Quartile order by RowNumber desc) as LastRow
+                         from (
+                                  select *, Row_Number() over (partition by Quartile order by Quartile asc) as RowNumber
+                                  from dailyHistory
+                              ) as t
+                     ) as t1
+                where (t1.RowNumber = 1 and Quartile = 1)
+                   or t1.RowNumber = CEILING(t1.LastRow / 2)
+                   or (t1.RowNumber = t1.LastRow)
+
             )
-
-
-            select *
-            from (
-                     select *, first_value(RowNumber) over (partition by Quartile order by RowNumber desc) as LastRow
-                     from (
-                              select *, Row_Number() over (partition by Quartile order by Quartile asc) as RowNumber
-                              from dailyHistory
-                          ) as t
-                 ) as t1
-            where (t1.RowNumber = 1 and Quartile = 1)
-               or t1.RowNumber = CEILING(t1.LastRow / 2)
-               or (t1.RowNumber = t1.LastRow)
-
-        )
 go
 drop procedure if exists GetStockHistoryDaily
 go
@@ -303,42 +304,6 @@ begin
 end
 go
 
-drop procedure if exists ProcessDailyDataIntoHistory
-go
-
-create procedure ProcessDailyDataIntoHistory @Time date
-as
-begin
-    insert into PriceHistory (StockSymbol, Volume, Opened, Closed, High, Low, DateTime)
-    select StockSymbol,
-           Max(Volume)        as Volume,
-           Max(Opened)        as Opened,
-           Max(Closed)        as Closed,
-           MAX(Price)         as High,
-           Min(Price)         as Low,
-           cast(Time as DATE) as DateTime
-
-    from (select PD.StockSymbol,
-                 PD.Price,
-                 PD.Time,
-                 First_Value(Price) over (partition by StockSymbol, cast(Time as DAte) order by Time)       as Opened,
-                 First_Value(Price) over (partition by StockSymbol, cast(Time as DAte) order by Time desc)  as Closed,
-                 First_Value(Volume) over (partition by StockSymbol, cast(Time as DAte) order by Time desc) as Volume
-
-          from PriceDaily as PD
-
-          where cast(Time as DAte) > (select Max(DateTime)
-                                      from PriceHistory as PH
-                                      where PH.StockSymbol = PD.StockSymbol)
-            and cast(Time as Date) <= @Time
-         ) as PriceDaily
-
-    group by StockSymbol, cast(Time as DATE)
-    order by cast(Time as DATE)
-end
-
-go
-
 drop procedure if exists GetStocksWithoutHistory
 go
 create procedure GetStocksWithoutHistory
@@ -360,13 +325,12 @@ end
 go
 drop procedure if exists UpdateStockStatus
 go
-create procedure UpdateStockStatus 
-@Symbol nvarchar(512),
-@Status nvarchar(50)
-    as 
-    begin
-        update Stock
-        set Status = @Status
-        where Symbol = @Symbol
-    end
+create procedure UpdateStockStatus @Symbol nvarchar(512),
+                                   @Status nvarchar(50)
+as
+begin
+    update Stock
+    set Status = @Status
+    where Symbol = @Symbol
+end
 go

@@ -6,5 +6,6 @@ namespace FinanceMonitor.DAL.Repositories.Interfaces
     public interface IManagementRepository
     {
         Task ProcessDailyData(DateTime dateTime);
+        Task CalculateFullHistoryGraphic();
     }
 }

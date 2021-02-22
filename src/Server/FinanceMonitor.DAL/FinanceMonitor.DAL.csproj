@@ -19,6 +19,9 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Content Include="Scripts\maintance_procedures.sql">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
       <Content Include="Scripts\procedures.sql">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>

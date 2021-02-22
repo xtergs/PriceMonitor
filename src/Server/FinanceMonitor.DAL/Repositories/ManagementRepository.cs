@@ -22,5 +22,12 @@ namespace FinanceMonitor.DAL.Repositories
                 Start = dateTime
             });
         }
+
+        public async Task CalculateFullHistoryGraphic()
+        {
+            var connection = GetConnection();
+
+            await connection.ExecuteAsync("exec dbo.CalculateHistoryGraphic");
+        }
     }
 }

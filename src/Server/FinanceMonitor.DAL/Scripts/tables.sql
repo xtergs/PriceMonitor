@@ -91,3 +91,19 @@ go
 
 drop index if exists IX_DateTime_StockSymbol on PriceHistory
 create unique index IX_DateTime_StockSymbol on PriceHistory (StockSymbol, DateTime)
+
+
+----
+go
+drop table if exists SampledHistoryDataYearly
+create table SampledHistoryDataYearly
+(
+    StockSymbol nvarchar(512) not null,
+    DateTime    Date          not null,
+    Volume      float         not null,
+    Opened      money         not null,
+    Closed      money         not null,
+    High        money         not null,
+    Low         money         not null,
+    constraint SampledHistoryDataYearly_PK PRIMARY KEY (StockSymbol, DateTime)
+)
