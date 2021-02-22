@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Net;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using Dapper;
@@ -21,6 +22,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Quartz;
 using Rebus.Config;
@@ -76,12 +78,19 @@ namespace FinanceMonitor.Api
             services.AddCors();
 
             services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
-                .AddIdentityServerAuthentication(options =>
+                .AddJwtBearer(options =>
                 {
                     // base-address of your identityserver
-                    options.Authority = "https://localhost:5002";
+                    options.Authority = Configuration.GetSection("Identity")["Authority"];
 
-                    options.ApiName = "api";
+                    options.Audience = "api";
+
+                    options.TokenValidationParameters = new TokenValidationParameters()
+                    {
+                        ValidateIssuer = false,
+                    };
+                    
+                    options.RequireHttpsMetadata = false;
                 });
 
             services.AutoRegisterHandlersFromAssemblyOf<UserCreatedHandler>();

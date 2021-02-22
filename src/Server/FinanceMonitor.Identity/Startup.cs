@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
+using System.Diagnostics;
 using FinanceMonitor.Identity.Data;
 using FinanceMonitor.Identity.Models;
 using FinanceMonitor.Messages;
@@ -35,6 +36,8 @@ namespace FinanceMonitor.Identity
         {
             var rebusConfig = new RebusConfig();
             Configuration.Bind("Rebus", rebusConfig);
+            
+             Debug.WriteLine(rebusConfig.RabbitMQConnection);
 
             services.AddControllersWithViews();
 

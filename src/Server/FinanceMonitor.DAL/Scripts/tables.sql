@@ -1,7 +1,7 @@
-﻿-- drop table if exists PriceDaily
--- drop table if exists PriceHistory
--- drop table if exists UserPrice
--- drop table if exists Stock
+﻿drop table if exists PriceDaily
+drop table if exists PriceHistory
+drop table if exists UserPrice
+drop table if exists Stock
 drop table if exists UserProfile
 create table UserProfile
 (
@@ -85,13 +85,6 @@ create table PriceDaily
     constraint PriceDaily_PK_Id Primary key (Id),
     constraint PriceDaily_FK_StockId Foreign Key (StockSymbol) references Stock (Symbol)
 
-)
-
-go
-drop table if exists UserProfile
-create table UserProfile
-(
-    Id nvarchar(512) not null primary key
 )
 
 go

@@ -1,7 +1,5 @@
 import {Stock} from "../Models/Stock";
-
-const host = "https://localhost:5001";
-const identityHost = "https://localhost:5002"
+import {host, identityHost} from "./Consts";
 
 export const Api = {
     addStock: async (symbol: string,

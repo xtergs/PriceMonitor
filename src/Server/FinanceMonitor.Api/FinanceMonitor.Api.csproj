@@ -1,8 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
-    </PropertyGroup>
+      <UserSecretsId>74aa2c64-1b82-4f8e-b62f-d8ce04133088</UserSecretsId>
+  </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="IdentityServer4.AccessTokenValidation" Version="3.0.1" />

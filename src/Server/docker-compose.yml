@@ -1,4 +1,4 @@
-version: '3.4'
+version: '3.7'
 
 services:
   sqldata: 
@@ -24,6 +24,9 @@ services:
     depends_on:
       - sqldata
       - rabbitmq
+    restart: on-failure
+    mem_limit: 512m
+    cpus: 1
     environment:
       - Rebus__RabbitMQConnection=amqp://rabbitmq:5672
       - ConnectionStrings__DefaultConnection=Server=sqldata;Database=PriceMonitor.Identity;Integrated Security=False;User Id=sa;Password=Pass@word;MultipleActiveResultSets=True
@@ -36,6 +39,32 @@ services:
       - 5003:443
     volumes:
       - ${APPDATA}\microsoft\UserSecrets\:/root/.microsoft/usersecrets:ro  
+      - ${APPDATA}\.aspnet\https:/root/.aspnet/https:ro
+        
+  api:
+    build:
+      context: .
+      dockerfile: FinanceMonitor.Api/Dockerfile
+    restart: on-failure 
+    mem_limit: 512m
+    cpus: 1
+    depends_on:
+      - sqldata
+      - rabbitmq
+    environment:
+      - Rebus__RabbitMQConnection=amqp://rabbitmq:5672
+      - ConnectionStrings__DefaultConnection=Server=sqldata;Database=PriceMonitor.Data;Integrated Security=False;User Id=sa;Password=Pass@word;MultipleActiveResultSets=True
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+;https://+
+      - ASPNETCORE_HTTPS_PORT=5005
+      - Identity__Authority=http://identity
+      - Identity__Issuer=https://localhost:5005
+      - ASPNETCORE_Kestrel__Certificates__Development__Password=crypticpassword
+    ports:
+      - 5004:80
+      - 5005:443
+    volumes:
+      - ${APPDATA}\microsoft\UserSecrets\:/root/.microsoft/usersecrets:ro
       - ${APPDATA}\.aspnet\https:/root/.aspnet/https:ro
       
 volumes:
