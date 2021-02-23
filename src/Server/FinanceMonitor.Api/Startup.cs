@@ -15,9 +15,11 @@ using FinanceMonitor.DAL.Repositories;
 using FinanceMonitor.DAL.Repositories.Interfaces;
 using FinanceMonitor.DAL.Services;
 using FinanceMonitor.DAL.Services.Interfaces;
+using HealthChecks.UI.Client;
 using IdentityServer4.AccessTokenValidation;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -100,6 +102,8 @@ namespace FinanceMonitor.Api
                     t.UseRabbitMq(rebusConfig.RabbitMQConnection, "api").ClientConnectionName("api"));
                 return configure;
             });
+
+            AddCustomHealthCheck(services, Configuration);
         }
 
         private static void ConfigureQuartz(IServiceCollection services)
@@ -206,8 +210,31 @@ namespace FinanceMonitor.Api
             app.UseAuthentication();
 
             app.UseAuthorization();
+            
+            app.UseHealthChecks("/hc", new HealthCheckOptions()
+            {
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
 
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+        }
+
+        public static IServiceCollection AddCustomHealthCheck(IServiceCollection services,
+            IConfiguration configuration)
+        {
+            var hcBuilder = services.AddHealthChecks();
+
+            hcBuilder
+                .AddSqlServer(
+                    configuration.GetConnectionString("DefaultConnection"),
+                    name: "ApiDb-check",
+                    tags: new string[] { "apidb" })
+                .AddRabbitMQ(configuration["Rebus:RabbitMQConnection"],
+                    name: "Api-RabbitMQ-check",
+                    tags: new []{"rabbitMQ"});
+
+            return services;
         }
     }
 }

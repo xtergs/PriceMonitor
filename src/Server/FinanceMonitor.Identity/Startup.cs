@@ -6,8 +6,10 @@ using System.Diagnostics;
 using FinanceMonitor.Identity.Data;
 using FinanceMonitor.Identity.Models;
 using FinanceMonitor.Messages;
+using HealthChecks.UI.Client;
 using IdentityServer4;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -101,6 +103,8 @@ namespace FinanceMonitor.Identity
             });
 
             services.AddCors();
+            
+            AddCustomHealthCheck(services, Configuration);
         }
 
         public void Configure(IApplicationBuilder app)
@@ -124,7 +128,31 @@ namespace FinanceMonitor.Identity
             app.UseRouting();
             app.UseIdentityServer();
             app.UseAuthorization();
+            
+            app.UseHealthChecks("/hc", new HealthCheckOptions()
+            {
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
+            
             app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
+        }
+        
+        public static IServiceCollection AddCustomHealthCheck(IServiceCollection services,
+            IConfiguration configuration)
+        {
+            var hcBuilder = services.AddHealthChecks();
+
+            hcBuilder
+                .AddSqlServer(
+                    configuration.GetConnectionString("DefaultConnection"),
+                    name: "IdentityDb-check",
+                    tags: new string[] { "identitydb" })
+                .AddRabbitMQ(configuration["Rebus:RabbitMQConnection"],
+                    name: "Identity-RabbitMQ-check",
+                    tags: new []{"rabbitMQ"});
+
+            return services;
         }
     }
 }
