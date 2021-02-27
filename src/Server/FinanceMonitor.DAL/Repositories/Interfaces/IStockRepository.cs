@@ -10,7 +10,7 @@ namespace FinanceMonitor.DAL.Repositories.Interfaces
 {
     public interface IStockRepository
     {
-        Task<Stock> GetStock(string symbol);
+        Task<Stock?> GetStock(string symbol);
         Task<Stock> CreateStock(Stock stock);
         Task<ICollection<Stock>> GetStocksWithoutHistory();
         Task InsertHistory(ICollection<PriceHistory> history);

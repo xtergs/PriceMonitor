@@ -7,7 +7,7 @@ namespace FinanceMonitor.Api.Extensions
     {
         public static string UserId(this ControllerBase controller)
         {
-            var userId = controller.User.FindFirstValue("sub");
+            var userId = controller.User.FindFirstValue( ClaimTypes.NameIdentifier);
             return userId;
         }
     }

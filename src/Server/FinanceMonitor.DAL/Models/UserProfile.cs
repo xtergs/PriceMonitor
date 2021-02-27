@@ -1,7 +1,9 @@
-﻿namespace FinanceMonitor.DAL.Models
+﻿#pragma warning disable 8618
+
+namespace FinanceMonitor.DAL.Models
 {
-    public class UserProfile
+    public sealed record UserProfile
     {
-        public string Id { get; set; }
+        public string Id { get; init; }
     }
 }

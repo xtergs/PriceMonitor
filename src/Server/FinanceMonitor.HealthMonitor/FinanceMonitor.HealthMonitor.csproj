@@ -2,11 +2,17 @@
 
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
+        <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="AspNetCore.HealthChecks.UI" Version="5.0.1" />
       <PackageReference Include="AspNetCore.HealthChecks.UI.SqlServer.Storage" Version="5.0.1" />
+      <PackageReference Include="Fody" Version="6.3.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="NullGuard.Fody" Version="3.0.0" />
     </ItemGroup>
 
 </Project>

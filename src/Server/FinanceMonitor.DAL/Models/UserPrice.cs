@@ -1,13 +1,14 @@
 ﻿using System;
+#pragma warning disable 8618
 
 namespace FinanceMonitor.DAL.Models
 {
-    public class UserPrice
+    public record UserPrice
     {
-        public string UserId { get; set; }
-        public string  StockSymbol { get; set; }
-        public double Price { get; set; }
-        public int Count { get; set; }
-        public DateTime DateTime { get; set; }
+        public string UserId { get; init; }
+        public string  StockSymbol { get; init; }
+        public double Price { get; init; }
+        public int Count { get; init; }
+        public DateTime DateTime { get; init; }
     }
 }

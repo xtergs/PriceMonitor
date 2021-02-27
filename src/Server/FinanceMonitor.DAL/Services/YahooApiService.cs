@@ -10,7 +10,7 @@ namespace FinanceMonitor.DAL.Services
 {
     public class YahooApiService : IYahooApiService
     {
-        public async Task<ApiStock> GetStock(string symbol)
+        public async Task<ApiStock?> GetStock(string? symbol)
         {
             symbol = symbol?.ToUpper();
             var result = await Yahoo.Symbols(symbol)
@@ -38,7 +38,7 @@ namespace FinanceMonitor.DAL.Services
                 QuoteType = data.QuoteType
             };
 
-            if (data.Fields.ContainsKey("LongName")) model.LongName = data.LongName;
+            if (data.Fields.ContainsKey("LongName")) model = model with {LongName = data.LongName};
 
             if (data.Fields.ContainsKey("FinancialCurrency")) model.FinancialCurrency = data.FinancialCurrency;
 
@@ -65,7 +65,7 @@ namespace FinanceMonitor.DAL.Services
         }
 
 
-        public async Task<ApiDailyStock> GetDailyStock(string symbol)
+        public async Task<ApiDailyStock?> GetDailyStock(string? symbol)
         {
             symbol = symbol?.ToUpper();
             var result = await Yahoo.Symbols(symbol)
@@ -94,25 +94,27 @@ namespace FinanceMonitor.DAL.Services
             };
 
             if (data.MarketState == "REGULAR")
-            {
-                model.Time = DateTimeOffset.FromUnixTimeSeconds(data.RegularMarketTime).UtcDateTime;
-                model.Price = data.RegularMarketPrice;
-                model.Volume = data.RegularMarketVolume;
-            }
+                model = model with
+                {
+                    Time = DateTimeOffset.FromUnixTimeSeconds(data.RegularMarketTime).UtcDateTime,
+                    Price = data.RegularMarketPrice,
+                    Volume = data.RegularMarketVolume
+                };
             else if (data.MarketState == "POST")
-            {
-                model.Time = DateTimeOffset.FromUnixTimeSeconds(data.PostMarketTime).UtcDateTime;
-                model.Price = data.PostMarketPrice;
-                model.Volume = data.RegularMarketVolume;
-            }
+                model = model with
+                {
+                    Time = DateTimeOffset.FromUnixTimeSeconds(data.PostMarketTime).UtcDateTime,
+                    Price = data.PostMarketPrice,
+                    Volume = data.RegularMarketVolume
+                };
 
-            if (data.Fields.ContainsKey("Ask")) model.Ask = data.Ask;
+            if (data.Fields.ContainsKey("Ask")) model = model with {Ask = data.Ask};
 
-            if (data.Fields.ContainsKey("AskSize")) model.AskSize = data.AskSize;
+            if (data.Fields.ContainsKey("AskSize")) model = model with {AskSize = data.AskSize};
 
-            if (data.Fields.ContainsKey("Bid")) model.Bid = data.Bid;
+            if (data.Fields.ContainsKey("Bid")) model = model with {Bid = data.Bid};
 
-            if (data.Fields.ContainsKey("BidSize")) model.BidSize = data.BidSize;
+            if (data.Fields.ContainsKey("BidSize")) model = model with {BidSize = data.BidSize};
 
             return model;
         }

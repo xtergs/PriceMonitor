@@ -15,7 +15,7 @@ namespace FinanceMonitor.DAL.UserProfile.Queries.GetUserStocks
             UserId = userId;
         }
 
-        public string UserId { get; init; }
+        public string UserId { get; }
 
         public class GetUserStocksQueryHandler : IRequestHandler<GetUserStocksQuery, ICollection<UserStock>>
         {

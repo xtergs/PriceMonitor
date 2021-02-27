@@ -6,8 +6,8 @@ namespace FinanceMonitor.DAL.Services.Interfaces
 {
     public interface IYahooApiService
     {
-        Task<ApiStock> GetStock(string symbol);
+        Task<ApiStock?> GetStock(string symbol);
         Task<ICollection<ApiHistory>> GetFullHistory(string symbol);
-        Task<ApiDailyStock> GetDailyStock(string symbol);
+        Task<ApiDailyStock?> GetDailyStock(string symbol);
     }
 }

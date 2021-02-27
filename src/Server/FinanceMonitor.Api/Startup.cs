@@ -51,18 +51,10 @@ namespace FinanceMonitor.Api
             {
                 x.ConnectionString = Configuration.GetConnectionString("DefaultConnection");
             });
-            services.Configure<MigrationOptions>(x =>
-            {
-                x.ConnectionString = Configuration.GetConnectionString("DefaultConnection");
-                x.FilePath = Path.Combine(Path.GetDirectoryName(
-                        Assembly.GetExecutingAssembly().GetName().CodeBase), "migration.sql")
-                    .Substring(6);
-            });
 
             services.AddScoped<IStockRepository, StockRepository>();
             services.AddScoped<IYahooApiService, YahooApiService>();
             services.AddScoped<IUserStockService, UserStockService>();
-            services.AddSingleton<MigrationService>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IManagementRepository, ManagementRepository>();
 

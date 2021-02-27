@@ -1,13 +1,15 @@
 ﻿using System;
+#pragma warning disable 8618
+
 
 namespace FinanceMonitor.DAL.Dto
 {
-    public class AddUserPriceDto
+    public sealed record AddUserPriceDto
     {
-        public string UserId { get; set; }
-        public string Symbol { get; set; }
-        public double Price { get; set; }
-        public int Count { get; set; }
-        public DateTime DateTime { get; set; }
+        public string UserId { get; init; }
+        public string Symbol { get; init; }
+        public double Price { get; init; }
+        public int Count { get; init; }
+        public DateTime DateTime { get; init; }
     }
 }

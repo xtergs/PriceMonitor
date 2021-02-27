@@ -5,6 +5,8 @@ using FinanceMonitor.DAL.Dto;
 using FinanceMonitor.DAL.Models;
 using FinanceMonitor.DAL.Services.Interfaces;
 using MediatR;
+#pragma warning disable 8618
+
 
 namespace FinanceMonitor.DAL.UserProfile.Commands.AddUserShare
 {

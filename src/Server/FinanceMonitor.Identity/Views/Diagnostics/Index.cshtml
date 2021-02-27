@@ -30,7 +30,7 @@
                 </div>
                 <div class="card-body">
                     <dl>
-                        @foreach (var prop in Model.AuthenticateResult.Properties.Items)
+                        @foreach (var prop in Model.AuthenticateResult.Properties?.Items)
                         {
                             <dt>@prop.Key</dt>
                             <dd>@prop.Value</dd>

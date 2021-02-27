@@ -3,6 +3,6 @@
     public class RebusConfig
     {
         public static string Section => "Rebus";
-        public string RabbitMQConnection { get; set; }
+        public string? RabbitMQConnection { get; set; }
     }
 }

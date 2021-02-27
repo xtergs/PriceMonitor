@@ -1,8 +1,10 @@
-﻿namespace FinanceMonitor.Messages
+﻿#pragma warning disable 8618
+
+namespace FinanceMonitor.Messages
 {
-    public class UserCreated
+    public sealed record UserCreated
     {
-        public string UserId { get; set; }
-        public string Email { get; set; }
+        public string UserId { get; init; }
+        public string Email { get; init; }
     }
 }

@@ -180,6 +180,31 @@ begin
                    from PriceDaily as PD
     ) as PD on S.Symbol = PD.StockSymbol and PD.r = 1
 
+    select S.*, PD.*
+    from Stock as S
+
+             join (select distinct
+                          StockSymbol,
+                          First_Value(Price) over(partition by  StockSymbol order by Time desc)  as                                                       CurrentPrice,
+                          First_Value(Time) over(partition by  StockSymbol order by Time desc)   as                                                       CurrentTime,
+                          First_Value(Volume) over(partition by  StockSymbol order by Time desc) as                                                       CurrentVolume
+                   from PriceDaily
+    ) as PD on S.Symbol = PD.StockSymbol
+
+--     With WholeTable as (
+--         select distinct S.*,
+--                         First_Value(Price) over(partition by  Symbol order by P.Time desc) as CurrentPrice,
+--                         First_Value(P.Time) over(partition by  Symbol order by P.Time desc) as CurrentTime,
+--                         First_Value(Volume) over(partition by  Symbol order by P.Time desc) as CurrentVolume
+--         from Stock as S
+--                  left join PriceDaily P on S.Symbol = P.StockSymbol    
+--     )
+--     select Symbol, Market, Timezone, Time, ShortName, LongName, Currency, FinancialCurrency, Language, LastClosed, LastOpened, QuoteType, Status, 
+--            
+--            Max(CurrentPrice), Max(CurrentTime), Max(CurrentVolume) from WholeTable
+-- GROUP BY Symbol, Market, Timezone, Time, ShortName, LongName, Currency, FinancialCurrency, Language, LastClosed, LastOpened, QuoteType, Status
+--     
+    
     select S.Symbol, history.*
     from Stock as S
              left join SampledHistoryDataYearly as history on S.Symbol = history.StockSymbol

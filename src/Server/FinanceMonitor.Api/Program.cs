@@ -11,7 +11,6 @@ namespace FinanceMonitor.Api
         public static async Task Main(string[] args)
         {
             var host = CreateHostBuilder(args).Build();
-            //await Migrate(host);
             await host.RunAsync();
         }
 
@@ -19,12 +18,6 @@ namespace FinanceMonitor.Api
         {
             return Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
-        }
-
-        private static async Task Migrate(IHost host)
-        {
-            var migrationService = host.Services.GetRequiredService<MigrationService>();
-            await migrationService.Migrate();
         }
     }
 }

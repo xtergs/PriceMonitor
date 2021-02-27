@@ -24,7 +24,7 @@ namespace FinanceMonitor.DAL.Repositories
         }
 
 
-        public async Task<Stock> GetStock(string symbol)
+        public async Task<Stock?> GetStock(string symbol)
         {
             await using var db = new SqlConnection(_options.ConnectionString);
 
@@ -97,12 +97,13 @@ namespace FinanceMonitor.DAL.Repositories
             var stocks = result.Read<StockListItemDto>();
             var history = result.Read<PriceHistory>();
 
-            var grouped = stocks.GroupJoin(history, dto => dto.Symbol, priceHistory => priceHistory.StockSymbol, (dto, histories) =>
-            {
-                dto.FullHistory = histories.ToArray();
-                return dto;
-            });
-            
+            var grouped = stocks.GroupJoin(history, dto => dto.Symbol, priceHistory => priceHistory.StockSymbol,
+                (dto, histories) =>
+                {
+                    dto = dto with {FullHistory = histories.ToArray()};
+                    return dto;
+                });
+
             return grouped.ToArray();
         }
 

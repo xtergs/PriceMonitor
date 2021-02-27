@@ -3,6 +3,7 @@
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
       <UserSecretsId>74aa2c64-1b82-4f8e-b62f-d8ce04133088</UserSecretsId>
+      <Nullable>enable</Nullable>
   </PropertyGroup>
 
     <ItemGroup>
@@ -11,12 +12,17 @@
         <PackageReference Include="AspNetCore.HealthChecks.System" Version="5.0.1" />
         <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="5.0.1" />
         <PackageReference Include="AspNetCore.HealthChecks.UI.Core" Version="5.0.1" />
+        <PackageReference Include="Fody" Version="6.3.0">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="IdentityServer4.AccessTokenValidation" Version="3.0.1" />
         <PackageReference Include="MediatR" Version="9.0.0" />
         <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="9.0.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.1" NoWarn="NU1605" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="5.0.1" NoWarn="NU1605" />
         <PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />
+        <PackageReference Include="NullGuard.Fody" Version="3.0.0" />
         <PackageReference Include="Quartz" Version="3.2.3" />
         <PackageReference Include="Quartz.AspNetCore" Version="3.2.3" />
         <PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.2.3" />

@@ -11,31 +11,31 @@ namespace FinanceMonitor.Api.Filters
         public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
             var hasAuthorize =
-                context.MethodInfo.DeclaringType.GetCustomAttributes(true).OfType<AuthorizeAttribute>().Any()
-                || context.MethodInfo.GetCustomAttributes(true).OfType<AuthorizeAttribute>().Any();
+                context.MethodInfo.DeclaringType is not null
+                && (context.MethodInfo.DeclaringType.GetCustomAttributes(true).OfType<AuthorizeAttribute>().Any()
+                    || context.MethodInfo.GetCustomAttributes(true).OfType<AuthorizeAttribute>().Any());
 
-            if (hasAuthorize)
+            if (!hasAuthorize) return;
+            
+            operation.Responses.Add("401", new OpenApiResponse {Description = "Unauthorized"});
+            operation.Responses.Add("403", new OpenApiResponse {Description = "Forbidden"});
+
+            operation.Security = new List<OpenApiSecurityRequirement>
             {
-                operation.Responses.Add("401", new OpenApiResponse {Description = "Unauthorized"});
-                operation.Responses.Add("403", new OpenApiResponse {Description = "Forbidden"});
-
-                operation.Security = new List<OpenApiSecurityRequirement>
+                new()
                 {
-                    new()
-                    {
-                        [
-                            new OpenApiSecurityScheme
+                    [
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
                             {
-                                Reference = new OpenApiReference
-                                {
-                                    Type = ReferenceType.SecurityScheme,
-                                    Id = "oauth2"
-                                }
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "oauth2"
                             }
-                        ] = new[] {"api1"}
-                    }
-                };
-            }
+                        }
+                    ] = new[] {"api1"}
+                }
+            };
         }
     }
 }

@@ -38,8 +38,12 @@ namespace FinanceMonitor.Api.Jobs
             foreach (var stock in stocks)
             {
                 var apiInfo = await _apiService.GetDailyStock(stock.Symbol);
+                if (apiInfo == null)
+                {
+                    continue;
+                }
 
-                _mediator.Send(new UpdateStockStatusCommand(apiInfo.Symbol, apiInfo.MarketState));
+                await _mediator.Send(new UpdateStockStatusCommand(apiInfo.Symbol, apiInfo.MarketState));
 
                 if (apiInfo.MarketState == "POST") //closed
                     continue;

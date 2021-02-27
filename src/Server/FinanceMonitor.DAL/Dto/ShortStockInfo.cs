@@ -1,11 +1,12 @@
 ﻿using System;
+#pragma warning disable 8618
 
 namespace FinanceMonitor.DAL.Dto
 {
-    public class ShortStockInfo
+    public record ShortStockInfo
     {
-        public Guid Id { get; set; }
-        public string Symbol { get; set; }
-        public DateTime? LastDailyRecord { get; set; }
+        public Guid Id { get; init; }
+        public string Symbol { get; init; }
+        public DateTime? LastDailyRecord { get; init; }
     }
 }

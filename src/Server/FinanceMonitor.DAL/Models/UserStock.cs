@@ -1,15 +1,16 @@
-﻿using System;
+﻿#pragma warning disable 8618
+
 
 namespace FinanceMonitor.DAL.Models
 {
-    public class UserStock
+    public sealed record UserStock
     {
-        public string Symbol { get; set; }
-        public int Shares { get; set; }
-        public double Total { get; set; }
-        public double TotalProfit { get; set; }
-        public string ShortName { get; set; }
-        public string LongName { get; set; }
+        public string Symbol { get; init; }
+        public int Shares { get; init; }
+        public double Total { get; init; }
+        public double TotalProfit { get; init; }
+        public string ShortName { get; init; }
+        public string LongName { get; init; }
         
     }
 }

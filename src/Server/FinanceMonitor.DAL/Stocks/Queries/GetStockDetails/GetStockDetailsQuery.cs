@@ -16,7 +16,7 @@ namespace FinanceMonitor.DAL.Stocks.Queries.GetStockDetails
 
         public string Symbol { get; init; }
 
-        public class GetStockDetailsQueryHandler : IRequestHandler<GetStockDetailsQuery, Stock>
+        public class GetStockDetailsQueryHandler : IRequestHandler<GetStockDetailsQuery, Stock?>
         {
             private readonly IStockRepository _stockRepository;
 
@@ -25,7 +25,7 @@ namespace FinanceMonitor.DAL.Stocks.Queries.GetStockDetails
                 _stockRepository = stockRepository ?? throw new ArgumentNullException(nameof(stockRepository));
             }
 
-            public Task<Stock> Handle(GetStockDetailsQuery request, CancellationToken cancellationToken)
+            public Task<Stock?> Handle(GetStockDetailsQuery request, CancellationToken cancellationToken)
             {
                 return _stockRepository.GetStock(request.Symbol);
             }
