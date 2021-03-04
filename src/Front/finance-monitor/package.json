@@ -55,6 +55,7 @@
     "react-app-polyfill": "^1.0.0",
     "react-dev-utils": "^9.0.0",
     "react-dom": "^16.8.6",
+    "react-page-visibility": "^6.4.0",
     "react-router-dom": "^5.2.0",
     "recharts": "2.0.0-beta.8",
     "resolve": "1.10.0",

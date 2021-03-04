@@ -169,6 +169,12 @@ go
 create procedure GetSavedStocks
 as
 begin
+    
+--     alter database PriceMonitor set compatibility_level = 150
+--     drop index idx_PriceDaily_Symbol_Time on PriceDaily
+--     create index idx_PriceDaily_Symbol_Time on PriceDaily(StockSymbol, Time desc)
+--     include (Price, Volume);
+    
     select S.*, PD.*
     from Stock as S
 
@@ -180,16 +186,16 @@ begin
                    from PriceDaily as PD
     ) as PD on S.Symbol = PD.StockSymbol and PD.r = 1
 
-    select S.*, PD.*
-    from Stock as S
-
-             join (select distinct
-                          StockSymbol,
-                          First_Value(Price) over(partition by  StockSymbol order by Time desc)  as                                                       CurrentPrice,
-                          First_Value(Time) over(partition by  StockSymbol order by Time desc)   as                                                       CurrentTime,
-                          First_Value(Volume) over(partition by  StockSymbol order by Time desc) as                                                       CurrentVolume
-                   from PriceDaily
-    ) as PD on S.Symbol = PD.StockSymbol
+--     select S.*, PD.*
+--     from Stock as S
+-- 
+--              join (select distinct
+--                           StockSymbol,
+--                           First_Value(Price) over(partition by  StockSymbol order by Time desc)  as                                                       CurrentPrice,
+--                           First_Value(Time) over(partition by  StockSymbol order by Time desc)   as                                                       CurrentTime,
+--                           First_Value(Volume) over(partition by  StockSymbol order by Time desc) as                                                       CurrentVolume
+--                    from PriceDaily
+--     ) as PD on S.Symbol = PD.StockSymbol
 
 --     With WholeTable as (
 --         select distinct S.*,

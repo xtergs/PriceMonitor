@@ -33,7 +33,6 @@ end
 
 go
 
-
 drop procedure if exists CalculateHistoryGraphic
 go
 create procedure CalculateHistoryGraphic

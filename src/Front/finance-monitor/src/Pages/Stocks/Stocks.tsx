@@ -6,6 +6,8 @@ import {host} from "../../Api/Consts";
 import { useHistory } from 'react-router-dom';
 import {CartesianGrid, Legend, Line, LineChart, Tooltip, XAxis, YAxis} from "recharts";
 import moment from "moment";
+// @ts-ignore
+import { usePageVisibility } from 'react-page-visibility';
 
 interface IProps {
 
@@ -61,24 +63,39 @@ export const Stocks = (props: IProps) => {
     const [isLoading, setLoading] = React.useState(true);
     const [stocks, setStocks] = React.useState<StockListItemDto[]>([])
 
+    const isVisible = usePageVisibility()
+
+
     useEffect(() => {
+        if (!isVisible){
+            return ;
+        }
         new StockClient({},host).list()
             .then(stocks => {
                 setStocks(stocks);
             })
             .finally(() => setLoading(false))
-    }, [])
+    }, [isVisible])
+
+
+    const refreshData = async ()=> {
+        await new StockClient({},host).list()
+            .then(stocks => {
+                setStocks(stocks);
+            })
+    };
 
     useEffect(()=>{
-        const interval = setInterval(async ()=> {
-            await new StockClient({},host).list()
-                .then(stocks => {
-                    setStocks(stocks);
-                })
-        }, 30*1000)
+        if (!isVisible){
+            console.log("page is not visible, do not pull data")
+            return;
+        }
+
+        console.log("page is visible, pull data")
+        const interval = setInterval(refreshData, 30*1000)
 
         return ()=> clearInterval(interval)
-    }, [])
+    }, [isVisible])
 
     const onRowClick = (item: Stock, index?: number) => {
         if (!item)
