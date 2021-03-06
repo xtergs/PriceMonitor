@@ -1,0 +1,42 @@
+﻿<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="SQL" type="docker-deploy" factoryName="docker-image" server-name="Docker">
+    <deployment type="docker-image">
+      <settings>
+        <option name="imageTag" value="mcr.microsoft.com/mssql/server:2019-latest" />
+        <option name="command" value="" />
+        <option name="containerName" value="sql" />
+        <option name="entrypoint" value="" />
+        <option name="envVars">
+          <list>
+            <DockerEnvVarImpl>
+              <option name="name" value="ACCEPT_EULA" />
+              <option name="value" value="Y" />
+            </DockerEnvVarImpl>
+            <DockerEnvVarImpl>
+              <option name="name" value="SA_PASSWORD" />
+              <option name="value" value="Pass@word" />
+            </DockerEnvVarImpl>
+          </list>
+        </option>
+        <option name="portBindings">
+          <list>
+            <DockerPortBindingImpl>
+              <option name="containerPort" value="1433" />
+              <option name="hostPort" value="5434" />
+            </DockerPortBindingImpl>
+          </list>
+        </option>
+        <option name="commandLineOptions" value="" />
+        <option name="volumeBindings">
+          <list>
+            <DockerVolumeBindingImpl>
+              <option name="containerPath" value="/var/opt/mssql" />
+              <option name="hostPath" value="sqlvolume1" />
+            </DockerVolumeBindingImpl>
+          </list>
+        </option>
+      </settings>
+    </deployment>
+    <method v="2" />
+  </configuration>
+</component>
