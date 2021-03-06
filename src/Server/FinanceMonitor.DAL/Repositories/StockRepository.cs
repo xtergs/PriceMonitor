@@ -100,7 +100,7 @@ namespace FinanceMonitor.DAL.Repositories
             var grouped = stocks.GroupJoin(history, dto => dto.Symbol, priceHistory => priceHistory.StockSymbol,
                 (dto, histories) =>
                 {
-                    dto = dto with {FullHistory = histories.ToArray()};
+                    dto = dto with {FullHistory = histories?.DefaultIfEmpty()?.ToArray() ?? new PriceHistory[0]};
                     return dto;
                 });
 

@@ -29,6 +29,7 @@ using Microsoft.OpenApi.Models;
 using Quartz;
 using Rebus.Config;
 using Rebus.ServiceProvider;
+using Serilog;
 
 namespace FinanceMonitor.Api
 {
@@ -44,6 +45,12 @@ namespace FinanceMonitor.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // services.AddSingleton<Serilog.Core.Logger>(container => new LoggerConfiguration()
+            //     //.ConfigureEnrichers(container)
+            //     .ConfigureElk("http://elk:9200", Configuration.GetSection("Logging:Elk"), container)
+            //     .ConfigureSelfLog(container)
+            //     .CreateLogger());
+            
             var rebusConfig = new RebusConfig();
             Configuration.Bind("Rebus", rebusConfig);
 
@@ -190,6 +197,8 @@ namespace FinanceMonitor.Api
                     c.OAuthUsePkce();
                 });
             }
+            
+            app.UseSerilogRequestLogging(); 
 
             app.ApplicationServices.UseRebus(async bus => { await bus.Subscribe<UserCreatedHandler>(); });
 

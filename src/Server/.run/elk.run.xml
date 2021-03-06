@@ -1,0 +1,30 @@
+﻿<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="elk" type="docker-deploy" factoryName="docker-image" server-name="Docker">
+    <deployment type="docker-image">
+      <settings>
+        <option name="imageTag" value="sebp/elk" />
+        <option name="command" value="" />
+        <option name="containerName" value="elk" />
+        <option name="entrypoint" value="" />
+        <option name="portBindings">
+          <list>
+            <DockerPortBindingImpl>
+              <option name="containerPort" value="5601" />
+              <option name="hostPort" value="5601" />
+            </DockerPortBindingImpl>
+            <DockerPortBindingImpl>
+              <option name="containerPort" value="9200" />
+              <option name="hostPort" value="9200" />
+            </DockerPortBindingImpl>
+            <DockerPortBindingImpl>
+              <option name="containerPort" value="5044" />
+              <option name="hostPort" value="5044" />
+            </DockerPortBindingImpl>
+          </list>
+        </option>
+        <option name="commandLineOptions" value="-m 4g" />
+      </settings>
+    </deployment>
+    <method v="2" />
+  </configuration>
+</component>

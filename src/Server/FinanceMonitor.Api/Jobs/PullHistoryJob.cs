@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using FinanceMonitor.DAL.Models;
 using FinanceMonitor.DAL.Repositories.Interfaces;
 using FinanceMonitor.DAL.Services.Interfaces;
+using FinanceMonitor.DAL.Stocks.Commands.CalculateFullHistoryGraphic;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using Quartz;
 
@@ -13,16 +15,19 @@ namespace FinanceMonitor.Api.Jobs
     public class PullHistoryJob : IJob
     {
         private readonly IYahooApiService _apiService;
+        private readonly IMediator _mediator;
         private readonly ILogger<PullHistoryJob> _logger;
         private readonly IStockRepository _repository;
 
         public PullHistoryJob(ILogger<PullHistoryJob> logger,
             IStockRepository repository,
-            IYahooApiService apiService)
+            IYahooApiService apiService,
+            IMediator mediator)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _apiService = apiService ?? throw new ArgumentNullException(nameof(apiService));
+            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -48,6 +53,8 @@ namespace FinanceMonitor.Api.Jobs
 
                 await _repository.InsertHistory(mapped);
             }
+
+            await _mediator.Send(new CalculateFullHistoryGraphicCommand());
         }
     }
 }

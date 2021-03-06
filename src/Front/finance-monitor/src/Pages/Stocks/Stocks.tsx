@@ -108,7 +108,7 @@ export const Stocks = (props: IProps) => {
         return (<ProgressIndicator label={"Loading"}/>)
     }
 
-    return (<><h1>Stocks</h1>
+    return (<><h1>Stocks ({stocks?.length ?? 0})</h1>
         <DetailsList
             items={stocks}
             selectionMode={SelectionMode.none}

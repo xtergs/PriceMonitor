@@ -213,7 +213,7 @@ begin
     
     select S.Symbol, history.*
     from Stock as S
-             left join SampledHistoryDataYearly as history on S.Symbol = history.StockSymbol
+              join SampledHistoryDataYearly as history on S.Symbol = history.StockSymbol
 end
 go
 drop procedure if exists GetStockHistoryYearly
