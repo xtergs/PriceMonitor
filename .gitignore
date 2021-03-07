@@ -35,3 +35,16 @@ _ReSharper*/
 #Nuget packages folder
 packages/
 .idea/
+
+##Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
