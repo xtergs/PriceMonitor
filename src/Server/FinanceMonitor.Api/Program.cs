@@ -48,7 +48,8 @@ namespace FinanceMonitor.Api
                         AutoRegisterTemplate = true,
                         AutoRegisterTemplateVersion = AutoRegisterTemplateVersion.ESv6
                     })
-                    .WriteTo.Console())
+                    //.WriteTo.Console()
+                )
                 .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
         }
     }

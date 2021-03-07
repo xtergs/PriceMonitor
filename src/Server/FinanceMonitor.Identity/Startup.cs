@@ -20,6 +20,7 @@ using Microsoft.OpenApi.Models;
 using Rebus.Config;
 using Rebus.Routing.TypeBased;
 using Rebus.ServiceProvider;
+using Serilog;
 
 namespace FinanceMonitor.Identity
 {
@@ -118,6 +119,8 @@ namespace FinanceMonitor.Identity
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "FinanceMonitor.Identity v1")
                 );
             }
+            
+            app.UseSerilogRequestLogging();
 
             app.ApplicationServices.UseRebus();
 

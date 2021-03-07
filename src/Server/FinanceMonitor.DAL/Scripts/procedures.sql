@@ -211,9 +211,9 @@ begin
 -- GROUP BY Symbol, Market, Timezone, Time, ShortName, LongName, Currency, FinancialCurrency, Language, LastClosed, LastOpened, QuoteType, Status
 --     
     
-    select S.Symbol, history.*
-    from Stock as S
-              join SampledHistoryDataYearly as history on S.Symbol = history.StockSymbol
+--     select S.Symbol, history.*
+--     from Stock as S
+--               join SampledHistoryDataYearly as history on S.Symbol = history.StockSymbol
 end
 go
 drop procedure if exists GetStockHistoryYearly
@@ -365,3 +365,15 @@ begin
     where Symbol = @Symbol
 end
 go
+
+
+---
+go
+drop procedure if exists GetStockFullYearPoints
+go
+create procedure GetStockFullYearPoints @Symbol nvarchar(512)
+as
+    begin 
+        select DateTime, Closed from SampledHistoryDataYearly
+        where StockSymbol = @Symbol
+    end

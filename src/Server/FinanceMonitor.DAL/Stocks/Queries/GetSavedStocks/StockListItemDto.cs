@@ -21,6 +21,6 @@ namespace FinanceMonitor.DAL.Stocks.Queries.GetSavedStocks
         public string Market { get; init; }
         public string Timezone { get; init; }
 
-        public IReadOnlyCollection<PriceHistory> FullHistory { get; init; }
+        //public IReadOnlyCollection<PriceHistory> FullHistory { get; init; }
     }
 }

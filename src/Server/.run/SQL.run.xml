@@ -26,7 +26,7 @@
             </DockerPortBindingImpl>
           </list>
         </option>
-        <option name="commandLineOptions" value="" />
+        <option name="commandLineOptions" value="-m 4g" />
         <option name="volumeBindings">
           <list>
             <DockerVolumeBindingImpl>

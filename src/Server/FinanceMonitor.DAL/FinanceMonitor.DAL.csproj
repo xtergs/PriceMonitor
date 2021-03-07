@@ -13,6 +13,7 @@
       </PackageReference>
       <PackageReference Include="MediatR" Version="9.0.0" />
       <PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.0" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
       <PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />
       <PackageReference Include="NullGuard.Fody" Version="3.0.0" />
       <PackageReference Include="YahooFinanceApi" Version="2.1.2" />

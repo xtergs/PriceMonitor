@@ -107,3 +107,8 @@ create table SampledHistoryDataYearly
     Low         money         not null,
     constraint SampledHistoryDataYearly_PK PRIMARY KEY (StockSymbol, DateTime)
 )
+
+--
+
+create index idx_PriceDaily_Symbol_Time on PriceDaily(StockSymbol, Time desc)
+    include (Price, Volume);

@@ -9,17 +9,20 @@ using FinanceMonitor.DAL.Models;
 using FinanceMonitor.DAL.Repositories.Interfaces;
 using FinanceMonitor.DAL.Stocks.Queries.GetSavedStocks;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace FinanceMonitor.DAL.Repositories
 {
     public class StockRepository : BaseRepository, IStockRepository
     {
+        private readonly ILogger<StockRepository> _logger;
         private readonly StockOptions _options;
 
-        public StockRepository(IOptions<StockOptions> options)
+        public StockRepository(IOptions<StockOptions> options, ILogger<StockRepository> logger)
             : base(options.Value.ConnectionString)
         {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _options = options.Value;
         }
 
@@ -93,18 +96,24 @@ namespace FinanceMonitor.DAL.Repositories
             var result = await db.QueryMultipleAsync(
                 @"exec dbo.GetSavedStocks");
 
-
+            _logger.LogInformation("Executed {Method} db procedure", nameof(GetSavedStocks));
+            
             var stocks = result.Read<StockListItemDto>();
-            var history = result.Read<PriceHistory>();
+            //var history = result.Read<PriceHistory>();
 
-            var grouped = stocks.GroupJoin(history, dto => dto.Symbol, priceHistory => priceHistory.StockSymbol,
-                (dto, histories) =>
-                {
-                    dto = dto with {FullHistory = histories?.DefaultIfEmpty()?.ToArray() ?? new PriceHistory[0]};
-                    return dto;
-                });
+            _logger.LogInformation("Read results {Method}", nameof(GetSavedStocks));
+            
+            // var grouped = stocks.GroupJoin(history, dto => dto.Symbol, priceHistory => priceHistory.StockSymbol,
+            //     (dto, histories) =>
+            //     {
+            //         dto = dto with {FullHistory = histories?.DefaultIfEmpty()?.ToArray() ?? new PriceHistory[0]};
+            //         return dto;
+            //     });
+            
+            _logger.LogInformation("Formed results {Method}", nameof(GetSavedStocks));
 
-            return grouped.ToArray();
+            //return grouped.ToArray();
+            return stocks.ToArray();
         }
 
         public async Task<ICollection<PriceHistory>> GetStockHistory(string symbol,

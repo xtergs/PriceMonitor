@@ -42,16 +42,17 @@ const columns :IColumn[] = [
         ...defualtColumn('fullHistory'),
         minWidth: 500,
         onRender: (item, index, column) => {
-            return (<LineChart
-                width={500}
-                height={100}
-                data={item[column!.fieldName!]}
-            >
-                <XAxis dataKey="time" domain={['dataMin', 'dataMax']}/>
-                <YAxis type="number" domain={['dataMin', 'dataMax']} yAxisId={0}/>
-                <CartesianGrid stroke="#f5f5f5"/>
-                <Line type="monotone" dataKey="closed" stroke="#ff7300" dot={false} yAxisId={0}/>
-            </LineChart>)
+            return (<img key={item.symbol} src={`https://localhost:8181/api/preview/${item.symbol}`} height={100} width={500} />)
+            // return (<LineChart
+            //     width={500}
+            //     height={100}
+            //     data={item[column!.fieldName!]}
+            // >
+            //     <XAxis dataKey="time" domain={['dataMin', 'dataMax']}/>
+            //     <YAxis type="number" domain={['dataMin', 'dataMax']} yAxisId={0}/>
+            //     <CartesianGrid stroke="#f5f5f5"/>
+            //     <Line type="monotone" dataKey="closed" stroke="#ff7300" dot={false} yAxisId={0}/>
+            // </LineChart>)
         }
     }
 ]
