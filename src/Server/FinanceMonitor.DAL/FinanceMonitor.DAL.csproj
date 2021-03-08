@@ -16,6 +16,7 @@
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
       <PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />
       <PackageReference Include="NullGuard.Fody" Version="3.0.0" />
+      <PackageReference Include="Rebus" Version="6.0.0" />
       <PackageReference Include="YahooFinanceApi" Version="2.1.2" />
     </ItemGroup>
 
@@ -48,6 +49,10 @@
       <Content Include="migration.sql">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\FinanceMonitor.Messages\FinanceMonitor.Messages.csproj" />
     </ItemGroup>
 
 </Project>

@@ -1,8 +1,10 @@
 package chart
 
 import (
+	"app/services/chartsCache"
 	"app/services/repository"
 	"bytes"
+	"log"
 	"time"
 
 	"github.com/wcharczuk/go-chart"
@@ -58,4 +60,42 @@ func GetHistoryYearlyImage(symbol string) ([]byte, error) {
 	image := buffer.Bytes()
 
 	return image, nil
+}
+
+func RetrieveSymbolChart(symbol string) (error, []byte) {
+	err, imageBytes := chartsCache.Get(symbol)
+	if err != nil {
+		log.Println(err.Error())
+		return err, nil
+	}
+	if imageBytes == nil {
+		log.Println("Image doesn't not cached")
+	} else {
+		return nil, imageBytes
+	}
+
+	image, err := GetHistoryYearlyImage(symbol)
+
+	if err != nil {
+		return err, nil
+	}
+
+	chartsCache.Save(symbol, image)
+
+	return nil, image
+}
+
+func GetSymbols() (error, []string) {
+	symbols := []string{}
+
+	err, rows := repository.GetStocks()
+	if err != nil {
+		return err, nil
+	}
+
+	for _, v := range rows {
+		symbols = append(symbols, v.Symbol)
+	}
+
+	return nil, symbols
 }

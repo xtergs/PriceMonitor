@@ -16,6 +16,10 @@ type SampledHistoryDataYearly struct {
 	Closed   float64   `db:"Closed"`
 }
 
+type Stock struct {
+	Symbol string `db:"Symbol"`
+}
+
 var db *sqlx.DB
 
 func OpenConnection(connectionString string, url *url.URL) error {
@@ -53,6 +57,27 @@ func ReadSampledHistoryDataYearly(symbol string) (error, []SampledHistoryDataYea
 	if err != nil {
 		log.Println(err.Error())
 		return err, []SampledHistoryDataYearly{}
+	}
+
+	return nil, result
+}
+
+func GetStocks() (error, []Stock) {
+	ctx := context.Background()
+
+	err := db.PingContext(ctx)
+	if err != nil {
+		log.Println(err.Error())
+		return err, nil
+	}
+
+	tsql := fmt.Sprintf("exec dbo.GetStocks")
+
+	result := []Stock{}
+	err = db.Select(&result, tsql)
+	if err != nil {
+		log.Println(err.Error())
+		return err, nil
 	}
 
 	return nil, result

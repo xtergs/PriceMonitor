@@ -1,0 +1,11 @@
+{
+    "SQL": {
+        "host": "localhost:5434",
+        "database": "PriceMonitor",
+        "user": "sa",
+        "password": "Pass@word"
+    },
+    "RabbitMQ": {
+        "connectionString": "amqp://localhost:5672"
+    }
+}

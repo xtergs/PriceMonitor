@@ -15,6 +15,7 @@ using FinanceMonitor.DAL.Repositories;
 using FinanceMonitor.DAL.Repositories.Interfaces;
 using FinanceMonitor.DAL.Services;
 using FinanceMonitor.DAL.Services.Interfaces;
+using FinanceMonitor.Messages;
 using HealthChecks.UI.Client;
 using IdentityServer4.AccessTokenValidation;
 using MediatR;
@@ -28,6 +29,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Quartz;
 using Rebus.Config;
+using Rebus.Routing.TypeBased;
 using Rebus.ServiceProvider;
 using Serilog;
 
@@ -99,6 +101,8 @@ namespace FinanceMonitor.Api
             {
                 configure.Transport(t =>
                     t.UseRabbitMq(rebusConfig.RabbitMQConnection, "api").ClientConnectionName("api"));
+                configure.Routing(r => r.TypeBased().Map<SymbolHistoryChanged>("charts"));
+
                 return configure;
             });
 

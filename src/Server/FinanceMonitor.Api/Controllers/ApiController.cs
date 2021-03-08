@@ -6,6 +6,7 @@ using FinanceMonitor.DAL.Dto;
 using FinanceMonitor.DAL.Repositories.Interfaces;
 using FinanceMonitor.DAL.Services.Interfaces;
 using FinanceMonitor.DAL.Stocks.Commands.AddStock;
+using FinanceMonitor.DAL.Stocks.Commands.CalculateFullHistoryGraphic;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -77,6 +78,12 @@ namespace FinanceMonitor.Api.Controllers
             }
 
             return failedSymbols;
+        }
+
+        [HttpPost]
+        public async Task Trigger()
+        {
+            await _mediator.Send(new CalculateFullHistoryGraphicCommand());
         }
     }
 }
