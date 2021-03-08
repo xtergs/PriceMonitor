@@ -1,16 +1,13 @@
 package preview
 
 import (
-	"bytes"
 	"log"
 	"net/http"
-	"time"
-
-	"github.com/wcharczuk/go-chart"
 
 	"github.com/go-chi/chi/v5"
 
-	repository "app/services"
+	"app/services/chart"
+	"app/services/chartsCache"
 )
 
 func RenderYearChart(w http.ResponseWriter, r *http.Request) {
@@ -18,7 +15,22 @@ func RenderYearChart(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("Received " + symbol)
 
-	err, rows := repository.ReadSampledHistoryDataYearly(symbol)
+	err, imageBytes := chartsCache.Get(symbol)
+	if err != nil {
+		log.Println(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500 - Something bad happened!"))
+		return
+	}
+	if imageBytes == nil {
+		log.Println("Image doesn't not cached")
+	} else {
+		w.Header().Set("Content-Type", "image/png")
+		w.Write(imageBytes)
+		return
+	}
+
+	image, err := chart.GetHistoryYearlyImage(symbol)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -26,47 +38,10 @@ func RenderYearChart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var yValues = []float64{}
-	var xValues = []time.Time{}
+	chartsCache.Save(symbol, image)
 
-	for _, row := range rows {
-		yValues = append(yValues, row.Closed)
-		xValues = append(xValues, row.DateTime)
-	}
-
-	graph := chart.Chart{
-		Width:  500,
-		Height: 100,
-		XAxis: chart.XAxis{
-			ValueFormatter: func(v interface{}) string {
-				t := v.(time.Time)
-				return t.Format(time.RFC3339)
-			},
-			Name: "Date",
-		},
-		Series: []chart.Series{
-
-			chart.TimeSeries{
-				Style: chart.Style{
-					StrokeColor: chart.GetDefaultColor(0).WithAlpha(64),
-					FillColor:   chart.GetDefaultColor(0).WithAlpha(64),
-					Show:        true,
-				},
-				Name:    "SomeName",
-				YAxis:   chart.YAxisPrimary,
-				XValues: xValues,
-				YValues: yValues,
-			},
-		},
-	}
-
-	buffer := bytes.NewBuffer([]byte{})
-	err = graph.Render(chart.PNG, buffer)
-	if err != nil {
-		log.Fatal(err)
-	}
 	w.Header().Set("Content-Type", "image/png")
-	w.Write(buffer.Bytes())
+	w.Write(image)
 }
 
 func NewRouter() http.Handler {

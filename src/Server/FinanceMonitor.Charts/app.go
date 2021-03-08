@@ -7,7 +7,7 @@ import (
 	"net/url"
 
 	"app/preview"
-	repository "app/services"
+	"app/services/repository"
 
 	"github.com/go-chi/chi/v5"
 )

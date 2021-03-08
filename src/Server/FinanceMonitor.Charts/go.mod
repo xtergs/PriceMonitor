@@ -7,6 +7,7 @@ require (
 	github.com/ahmetb/go-linq/v3 v3.2.0 // indirect
 	github.com/denisenkom/go-mssqldb v0.9.0 // indirect
 	github.com/go-chi/chi/v5 v5.0.0 // indirect
+	github.com/go-redis/redis/v8 v8.7.1 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/jmoiron/sqlx v1.3.1 // indirect
 	github.com/wcharczuk/go-chart v2.0.1+incompatible // indirect
