@@ -22,7 +22,7 @@ func RenderYearChart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Content-Type", "image/svg+xml")
 	w.Write(image)
 }
 

@@ -175,16 +175,21 @@ begin
 --     create index idx_PriceDaily_Symbol_Time on PriceDaily(StockSymbol, Time desc)
 --     include (Price, Volume);
     
-    select S.*, PD.*
-    from Stock as S
+--     select S.*, PD.*
+--     from Stock as S
+-- 
+--              join (select row_number() over (partition by PD.StockSymbol order by Time Desc) r,
+--                           PD.StockSymbol,
+--                           PD.Price  as                                                       CurrentPrice,
+--                           PD.Time   as                                                       CurrentTime,
+--                           PD.Volume as                                                       CurrentVolume
+--                    from PriceDaily as PD
+--     ) as PD on S.Symbol = PD.StockSymbol and PD.r = 1
 
-             join (select row_number() over (partition by PD.StockSymbol order by Time Desc) r,
-                          PD.StockSymbol,
-                          PD.Price  as                                                       CurrentPrice,
-                          PD.Time   as                                                       CurrentTime,
-                          PD.Volume as                                                       CurrentVolume
-                   from PriceDaily as PD
-    ) as PD on S.Symbol = PD.StockSymbol and PD.r = 1
+select S.*, StockSummary.*
+from Stock as S
+
+         join StockSummary on S.Symbol = StockSummary.Symbol
 
 --     select S.*, PD.*
 --     from Stock as S

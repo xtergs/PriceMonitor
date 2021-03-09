@@ -109,6 +109,52 @@ create table SampledHistoryDataYearly
 )
 
 --
-
-create index idx_PriceDaily_Symbol_Time on PriceDaily(StockSymbol, Time desc)
+drop index if exists idx_PriceDaily_Symbol_Time on PriceDaily
+create index idx_PriceDaily_Symbol_Time on PriceDaily (StockSymbol, Time desc)
     include (Price, Volume);
+
+--
+go
+if not exists(select *
+              from sys.tables
+              where name = 'StockSummary')
+create table StockSummary
+(
+    Symbol        nvarchar(512) not null,
+    CurrentTime   DATETIME2     not null,
+    CurrentVolume float         not null,
+    CurrentPrice  float         not null,
+
+    constraint FK_StockSummary_Stock FOREIGN KEY (Symbol) references Stock (Symbol)
+)
+go
+drop trigger if exists PriceDaily_INSERT
+go
+create trigger PriceDaily_INSERT
+    on PriceDaily
+    for insert
+    as
+begin
+    declare @canUpdate int;
+    set @canUpdate = (select count(*)
+                      from StockSummary
+                               join inserted on StockSymbol = Symbol
+                      where CurrentTime < inserted.Time)
+    if @canUpdate = 1
+        begin
+            Update StockSummary
+            set CurrentTime   = Time,
+                CurrentVolume = Volume,
+                CurrentPrice  = Price
+            from inserted
+            where Symbol = StockSymbol
+        end
+    if @@ROWCOUNT = 0
+        insert into StockSummary(Symbol, CurrentTime, CurrentVolume, CurrentPrice)
+        select StockSymbol, Time, Volume, Price
+        from inserted
+
+end
+go
+
+--

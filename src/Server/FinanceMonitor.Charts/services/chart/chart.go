@@ -52,7 +52,7 @@ func GetHistoryYearlyImage(symbol string) ([]byte, error) {
 	}
 
 	buffer := bytes.NewBuffer([]byte{})
-	err = graph.Render(chart.PNG, buffer)
+	err = graph.Render(chart.SVG, buffer)
 	if err != nil {
 		return nil, err
 	}
