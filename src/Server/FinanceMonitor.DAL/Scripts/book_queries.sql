@@ -856,3 +856,459 @@ with C as(
 select actid, tranid, val, sumqty
 from c
 option (maxrecursion 0);
+go
+
+drop table if exists dbo.Sessions;
+create table dbo.Sessions
+(
+    keycol    int          not null,
+    app       varchar(10)  not null,
+    usr       varchar(10)  not null,
+    host      varchar(10)  not null,
+    starttime datetime2(0) not null,
+    endtime   datetime2(0) not null,
+    constraint PK_sessions primary key (keycol),
+    check (endtime > starttime)
+);
+go
+
+TRUNCATE TABLE dbo.Sessions;
+INSERT
+INTO dbo.Sessions(keycol,
+                  app, usr,
+                  host, starttime, endtime)
+VALUES (2, 'app1', 'user1', 'host1', '20190212 08:30', '20190212 10:30'),
+       (3,
+        'app1', 'user2', 'host1',
+        '20190212 08:30', '20190212 08:45'),
+       (5,
+        'app1', 'user3', 'host2',
+        '20190212 09:00', '20190212 09:30'),
+       (7,
+        'app1', 'user4', 'host2',
+        '20190212 09:15', '20190212 10:30'),
+       (11,
+        'app1', 'user5', 'host3',
+        '20190212 09:15', '20190212 09:30'),
+       (13,
+        'app1', 'user6', 'host3',
+        '20190212 10:30', '20190212 14:30'),
+       (17,
+        'app1', 'user7', 'host4',
+        '20190212 10:45', '20190212 11:30'),
+       (19,
+        'app1', 'user8', 'host4',
+        '20190212 11:00', '20190212 12:30'),
+       (23,
+        'app2', 'user8', 'host1',
+        '20190212 08:30', '20190212 08:45'),
+       (29,
+        'app2', 'user7', 'host1',
+        '20190212 09:00', '20190212 09:30'),
+       (31,
+        'app2', 'user6', 'host2',
+        '20190212 11:45', '20190212 12:00'),
+       (37,
+        'app2', 'user5', 'host2',
+        '20190212 12:30', '20190212 14:00'),
+       (41,
+        'app2', 'user4', 'host3',
+        '20190212 12:45', '20190212 13:30'),
+       (43,
+        'app2', 'user3', 'host3',
+        '20190212 13:00', '20190212 14:00'),
+       (47,
+        'app2', 'user2', 'host4',
+        '20190212 14:00', '20190212 16:30'),
+       (53,
+        'app2', 'user1', 'host4',
+        '20190212 15:30', '20190212 17:00');
+;
+go
+truncate table dbo.Sessions
+
+declare
+    @numrows as int = 1000000,
+    @numapps as int = 10;
+
+insert into dbo.Sessions with (tablock)
+    (keycol, app, usr, host, starttime, endtime)
+select row_number() over (order by (select null)) as keycol,
+       D.*,
+       Dateadd(second,
+               1 + abs(checksum(newid())) % (20 * 60),
+               starttime)                         as endtime
+from (
+         select 'app' + cast(1 + abs(checksum(newid())) % @numapps as varchar(10)) as app,
+                'users1'                                                           as usr,
+                'host1'                                                            as host,
+                dateadd(
+                        second,
+                        1 + abs(checksum(newid())) % (30 * 24 * 60 * 60),
+                        '20190101')                                                as starttime
+         from dbo.GetNums(1, @numrows) as nums
+     )
+         as D;
+go
+create index idx_start_end on dbo.SEssions (app, starttime, endtime)
+go
+
+with TimePoints as (
+    select app, starttime as ts
+    from dbo.Sessions
+),
+     Counts as (
+         select app,
+                ts,
+                (select count(*)
+                 from dbo.Sessions as S
+                 where P.app = S.app
+                   and P.ts >= S.starttime
+                   and P.ts < S.endtime) as concurrent
+         From TimePoints as P
+     )
+select app, max(concurrent) as mx
+from Counts
+Group by app;
+go
+drop index if exists idx_start_end on dbo.Sessions
+go
+-----
+create unique index idx_start on dbo.Sessions (app, starttime, keycol);
+create unique index idx_end on dbo.Sessions (app, endtime, keycol);
+go
+with C1 as (
+    select keycol, app, starttime as ts, +1 as type
+    from dbo.Sessions
+    union all
+    select keycol, app, endtime as ts, -1 as type
+    from dbo.Sessions
+),
+     C2 as (
+         select *,
+                sum(type) over (partition by app
+                    order by ts, type,keycol
+                    rows unbounded preceding) as cnt
+         from C1
+     )
+select app, max(cnt) as mx
+from C2
+group by app
+option (maxdop 1);
+go
+-----
+
+drop table if exists dbo.Sessions, dbo.Users;
+
+create table Users
+(
+    username varchar(14) not null,
+    constraint PK_Users primary key (username)
+);
+
+create table Sessions
+(
+    id        int          not null identity (1,1),
+    username  varchar(14)  not null,
+    starttime datetime2(3) not null,
+    endtime   datetime2(3) not null,
+    constraint PK_Sessions primary key (id),
+    constraint CHK_endtime_gteq_starttime
+        check (endtime >= starttime)
+);
+go
+declare
+    @num_users as int = 2000,
+    @intervals_per_user as int = 2500,
+    @start_perdiod as datetime2(3) = '20190101',
+    @end_period as datetime2(3) = '20190107',
+    @max_duration_in_ms as int = 3600000;
+
+truncate table Sessions;
+truncate table Users;
+
+insert into Users(username)
+select 'User' + right('000000000' + cast(U.n as varchar(10)), 10) as username
+from dbo.GetNums(1, @num_users) as U;
+
+with C as (
+    select 'User' + Right('000000000' + cast(U.n as varchar(10)), 10)                            as username,
+           dateadd(ms, abs(checksum(newid())) % 86400000,
+                   dateadd(day, abs(checksum(newid())) % datediff(day, @start_perdiod,
+                                                                  @end_period), @start_perdiod)) as starttime
+    from dbo.GetNums(1, @num_users) as U
+             cross join dbo.GetNums(1, @intervals_per_user) as I
+)
+insert
+into dbo.Sessions with (tablock) (username, starttime, endtime)
+select username,
+       starttime,
+       dateadd(ms, abs(checksum(newid())) % (@max_duration_in_ms + 1), starttime) as endtime
+from C;
+go
+create nonclustered columnstore index idx_cs on dbo.Sessions (id)
+    where id = -1 and id = -2;
+create unique index idx_user_start_id on dbo.Sessions (username, starttime, id);
+create unique index idx_user_end_id on dbo.Sessions (username, endtime, id);
+go
+with C1 as (
+    select id, username, starttime as ts, + 1 as type
+    from dbo.Sessions
+    union all
+    select id, username, endtime as ts, -1 as type
+    from dbo.Sessions
+),
+     C2 as (
+         select username,
+                ts,
+                type,
+                sum(type) over (partition by username order by ts, type desc, id
+                    rows unbounded preceding) as cnt
+         from C1
+     ),
+     C3 as (
+         select username,
+                ts,
+                (row_number() over (partition by username order by ts) - 1) / 2 + 1 as grp
+         from C2
+         where (type = 1 and cnt = 1)
+            or (type = -1 and cnt = 0)
+     )
+select username, min(ts) as starttime, max(ts) as endtime
+from C3
+group by username, grp;
+go
+drop index if exists idx_user_start_id on dbo.Sessions;
+drop index if exists idx_user_end_id on dbo.Sessions;
+go
+create unique index idx_user_start_end_id
+    on dbo.Sessions (username, starttime, endtime, id);
+go
+with C1 as (
+    select *,
+           case
+               when starttime <= max(endtime) over (partition by username
+                   order by starttime, endtime, id
+                   rows between unbounded preceding and 1 preceding)
+                   then 0
+               else 1
+               end as isstart
+    from dbo.Sessions
+),
+     C2 as (
+         select *,
+                sum(isstart) over (partition by username
+                    order by starttime, endtime, id
+                    rows unbounded preceding) as grp
+         from C1
+     )
+select username, min(starttime) as starttime, max(endtime) as endtime
+from C2
+group by username, grp;
+go
+
+drop table if exists dbo.T1;
+create table dbo.T1
+(
+    col1 int not null
+        constraint PK_T1 primary key
+);
+go
+insert into dbo.T1(col1)
+values (2),
+       (3),
+       (7),
+       (8),
+       (9),
+       (11),
+       (15),
+       (16),
+       (17),
+       (28);
+
+drop table if exists dbo.T2;
+create table dbo.T2
+(
+    col1 date not null
+        constraint PK_T2 primary key
+);
+go
+insert into dbo.T2(col1)
+values ('20190202'),
+       ('20190203'),
+       ('20190207'),
+       ('20190208'),
+       ('20190209'),
+       ('20190211'),
+       ('20190215'),
+       ('20190216'),
+       ('20190217'),
+       ('20190228');
+go
+create nonclustered columnstore index idx_cs on dbo.T1 (col1)
+    where col1 = -1 and col1 = -2;
+create nonclustered columnstore index idx_cs on dbo.T2 (col1)
+    where col1 = '00010101' and col1 = '00010102';
+go
+with C as (
+    select col1 as cur, lead(col1) over (order by col1) as nxt
+    from dbo.T1
+)
+select cur + 1 as rangestart, nxt - 1 as rangeend
+from C
+where nxt - cur > 1;
+go
+with C as (
+    select col1 as cur, lead(col1) over (order by col1) as nxt
+    from dbo.T2
+)
+select dateadd(day, 1, cur) as rangestart, dateadd(day, -1, nxt) rangeend
+from C
+where datediff(day, cur, nxt) > 1;
+go
+with C as (
+    select col1,
+           col1 - dense_rank() over (order by col1) as grp
+    from dbo.T1
+)
+select min(col1) as start_range, max(col1) as end_range
+from C
+group by grp;
+
+with C as (
+    select col1, dateadd(day, -1 * dense_rank() over (order by col1), col1) as grp
+    from dbo.T2
+)
+select min(col1) as start_range, max(col1) as end_range
+from C
+group by grp
+go
+with C1 as (
+    select col1,
+           case
+               when datediff(day, lag(col1) over (order by col1), col1) <= 2
+                   then 0
+               else 1
+               end as isstart
+    from dbo.T2
+),
+     C2 as (
+         select *,
+                sum(isstart) over (order by col1 rows unbounded preceding) as grp
+         from C1
+     )
+select Min(col1) as rangestart, max(col1) as rangeed
+from C2
+group by grp;
+go
+
+select distinct testid,
+                percentile_cont(0.5) within group (order by score) over (partition by testid)                           as median,
+                avg(score)
+                    over (partition by testid order by score rows between unbounded preceding and UNBOUNDED FOLLOWING ) as avg
+from Stats.Scores;
+go
+
+drop table if exists dbo.T1;
+go
+create table dbo.T1
+(
+    ordcol  int not null primary key,
+    datacol int not null
+);
+
+insert into dbo.T1
+values (1, 10),
+       (4, -15),
+       (5, 5),
+       (6, -10),
+       (8, -15),
+       (10, 20),
+       (17, 10),
+       (18, -10),
+       (20, -30),
+       (31, 20);
+
+with C1 as (
+    select ordcol,
+           datacol,
+           sum(datacol) over (order by ordcol
+               rows unbounded preceding) as partsum
+    from dbo.T1
+),
+     C2 as (
+         select *,
+                min(partsum) over (order by ordcol
+                    rows unbounded preceding) as mn
+         from C1
+     )
+select ordcol,
+       datacol,
+       partsum,
+       adjust,
+       partsum + adjust                                  as nonnegativesum,
+       adjust - lag(adjust, 1, 0) over (order by ordcol) as replenish
+from C2
+         cross apply(values (case when mn < 0 then -mn else 0 end)) as A(adjust)
+
+go
+
+drop table if exists dbo.Employees;
+go
+create table dbo.Employees
+(
+    empid   int         not null
+        constraint PK_Employees primary key,
+    mgrid   int         null
+        constraint FK_Employees_mgr_emp references dbo.Employees,
+    empname varchar(25) not null,
+    salary  money       not null,
+    check (empid <> mgrid)
+);
+
+insert into dbo.Employees(empid, mgrid, empname, salary)
+values (1, null, 'David', $10000.00),
+       (2, 1, 'Eitan', $7000.00),
+       (3, 1, 'Ina', $7500.00),
+       (4, 2, 'Seraph', $5000.00),
+       (5, 2, 'Jiru', $5500.00),
+       (6, 2, 'Steve', $4500.00),
+       (7, 3, 'Aaron', $5000.00),
+       (8, 5, 'Lilach', $3500.00),
+       (9, 7, 'Rita', $3000.00),
+       (10, 5, 'Sean', $3000.00),
+       (11, 7, 'Gabriel', $3000.00),
+       (12, 9, 'Emilia', $2000.00),
+       (13, 9, 'Michael', $2000.00),
+       (14, 9, 'Didi', $1500.00);
+
+create unique index idx_unc_mgrid_empid on dbo.Employees (mgrid, empid);
+
+go
+with EmpsRN as (
+    select *,
+           row_number() over (partition by mgrid order by empname, empid) as n
+    from dbo.Employees
+),
+     EmpsPath as (
+         select empid,
+                empname,
+                salary,
+                0                          as lvl,
+                cast(0x as varbinary(max)) as sortpath
+         from dbo.Employees
+         where mgrid is null
+
+         union all
+
+         select C.empid,
+                C.empname,
+                C.salary,
+                P.lvl + 1,
+                P.sortpath + cast(n as Binary(2)) as sortpath
+         from EmpsPath as P
+                  inner join EmpsRN as C on C.mgrid = P.empid
+     )
+select empid, salary, replicate('| ', lvl) + empname as empname
+from EmpsPath
+order by sortpath;
